@@ -1,7 +1,7 @@
 #include "openglbase.h"
 
-const int width = 800;
-const int height = 400;
+const int WIDTH = 800;
+const int HEIGHT = 400;
 
 int main()
 {
@@ -11,7 +11,7 @@ int main()
 	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 6);
 	glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 
-	GLFWwindow* window = glfwCreateWindow(width, height, "OPENGLBASE", NULL, NULL);
+	GLFWwindow* window = glfwCreateWindow(WIDTH, HEIGHT, "OPENGLBASE", NULL, NULL);
 	if (window == NULL)
 	{
 		glfwTerminate();
@@ -23,8 +23,11 @@ int main()
 	if (!gladLoadGLLoader(GLADloadproc(glfwGetProcAddress)))
 		throw std::runtime_error("Failed to use glad loader");
 
-	glViewport(0, 0, width, height);
 
+	glfwSetFramebufferSizeCallback(window, [](GLFWwindow* window, int width, int height)
+	{
+		glViewport(0, 0, width, height);
+	});
 
 	glClearColor(.3, .1, .4, 1.);
 
@@ -35,7 +38,6 @@ int main()
 		glfwPollEvents();
 		glfwSwapBuffers(window);
 	}
-
 
 	glfwTerminate();
 
