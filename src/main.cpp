@@ -14,13 +14,26 @@ int main()
 	GLFWwindow* window = glfwCreateWindow(width, height, "OPENGLBASE", NULL, NULL);
 	if (window == NULL)
 	{
-		std::cout << "Failed to create the GLFW window" << std::endl;
 		glfwTerminate();
+		throw std::runtime_error("Failed to create the GLFW window");
 	}
+
+	glfwMakeContextCurrent(window);
+
+	if (!gladLoadGLLoader(GLADloadproc(glfwGetProcAddress)))
+		throw std::runtime_error("Failed to use glad loader");
+
+	glViewport(0, 0, width, height);
+
+
+	glClearColor(.3, .1, .4, 1.);
 
 	while (!glfwWindowShouldClose(window))
 	{
+		glClear(GL_COLOR_BUFFER_BIT);
+
 		glfwPollEvents();
+		glfwSwapBuffers(window);
 	}
 
 
