@@ -30,7 +30,6 @@ int main()
 	glfwSetFramebufferSizeCallback(window, [](GLFWwindow* window, int width, int height)
 	{
 			// specify the viewport : "size of the screen"
-			std::cout << "test";
 			glViewport(0, 0, width, height);
 	});
 
