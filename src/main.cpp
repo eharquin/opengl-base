@@ -29,8 +29,8 @@ int main()
 	// define callback to window resizing
 	glfwSetFramebufferSizeCallback(window, [](GLFWwindow* window, int width, int height)
 	{
-			// specify the viewport : "size of the screen"
-			glViewport(0, 0, width, height);
+		// specify the viewport : "size of the screen"
+		glViewport(0, 0, width, height);
 	});
 
 	// define the clear color (VIOLET)
