@@ -8,12 +8,6 @@ const int HEIGHT = 1280;
 const unsigned short OPENGL_MAJOR_VERSION = 4;
 const unsigned short OPENGL_MINOR_VERSION = 6;
 
-struct Vertex
-{
-	glm::vec2 pos;
-	glm::vec2 uv;
-};
-
 int main()
 {
 	// ---------------------------------------------------------------------------------
@@ -59,16 +53,51 @@ int main()
 	// ---------------------------------------------------------------------------------
 	// ---------------------------------------------------------------------------------
 
-	std::vector<Vertex> vertices = {
-		{ {-.75f,  .5f}, {0, 1} },
-		{ { .75f,  .5f}, {1, 1} },
-		{ { .75f, -.5f}, {1, 0} },
-		{ {-.75f, -.5f}, {0, 0} }
+	std::vector<float> vertices = {
+		-0.5f, -0.5f, -0.5f,  0.0f, 0.0f,
+		 0.5f, -0.5f, -0.5f,  1.0f, 0.0f,
+		 0.5f,  0.5f, -0.5f,  1.0f, 1.0f,
+		-0.5f,  0.5f, -0.5f,  0.0f, 1.0f,
+
+		-0.5f, -0.5f,  0.5f,  0.0f, 0.0f,
+		 0.5f, -0.5f,  0.5f,  1.0f, 0.0f,
+		 0.5f,  0.5f,  0.5f,  1.0f, 1.0f,
+		-0.5f,  0.5f,  0.5f,  0.0f, 1.0f,
+		
+		-0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
+		-0.5f,  0.5f, -0.5f,  1.0f, 1.0f,
+		-0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
+		-0.5f, -0.5f,  0.5f,  0.0f, 0.0f,
+
+		 0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
+		 0.5f,  0.5f, -0.5f,  1.0f, 1.0f,
+		 0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
+		 0.5f, -0.5f,  0.5f,  0.0f, 0.0f,
+
+		-0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
+		 0.5f, -0.5f, -0.5f,  1.0f, 1.0f,
+		 0.5f, -0.5f,  0.5f,  1.0f, 0.0f,
+		-0.5f, -0.5f,  0.5f,  0.0f, 0.0f,
+
+		-0.5f,  0.5f, -0.5f,  0.0f, 1.0f,
+		 0.5f,  0.5f, -0.5f,  1.0f, 1.0f,
+		 0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
+		-0.5f,  0.5f,  0.5f,  0.0f, 0.0f,
 	};
 
-	std::vector<GLubyte> indices = {
+	std::vector<GLuint> indices = {
 		0, 1 ,2,
-		0, 2, 3
+		0, 2, 3,
+		4, 5, 6,
+		4, 6, 7,
+		8, 9, 10,
+		8, 10 ,11,
+		12, 13 ,14,
+		12, 14, 15,
+		16, 17, 18,
+		16, 18, 19,
+		20, 21, 22,
+		20, 22, 23
 	};
 
 	// -----------------------------------------------------------------------------------
@@ -77,23 +106,23 @@ int main()
 
 	// create vertex buffer object to store raw vertices
 	glCreateBuffers(1, &VBO);
-	glNamedBufferData(VBO, vertices.size() * sizeof(Vertex), vertices.data(), GL_STATIC_DRAW);
+	glNamedBufferData(VBO, vertices.size() * sizeof(float), vertices.data(), GL_STATIC_DRAW);
 
 	// create element buffer object to store indices
 	glCreateBuffers(1, &EBO);
-	glNamedBufferData(EBO, indices.size() * sizeof(GLubyte), indices.data(), GL_STATIC_DRAW);
+	glNamedBufferData(EBO, indices.size() * sizeof(GLuint), indices.data(), GL_STATIC_DRAW);
 
 	// create vertex array to store the organized vertices
 	glCreateVertexArrays(1, &VAO);
 
 	// bind the VBO to the VAO
-	glVertexArrayVertexBuffer(VAO, 0, VBO, 0, 4 * sizeof(float));
+	glVertexArrayVertexBuffer(VAO, 0, VBO, 0, 5 * sizeof(float));
 
 	// enable atribute and define vertex formats
 	glEnableVertexArrayAttrib(VAO, 0);
-	glVertexArrayAttribFormat(VAO, 0, 2, GL_FLOAT, false, 0);
+	glVertexArrayAttribFormat(VAO, 0, 3, GL_FLOAT, false, 0);
 	glEnableVertexArrayAttrib(VAO, 1);
-	glVertexArrayAttribFormat(VAO, 1, 2, GL_FLOAT, false, sizeof(glm::vec2));
+	glVertexArrayAttribFormat(VAO, 1, 2, GL_FLOAT, false, 3 * sizeof(float));
 
 	// associate vertex attributes and vertex buffer binding for a VAO
 	glVertexArrayAttribBinding(VAO, 0, 0);
@@ -141,6 +170,7 @@ int main()
 
 	// define the clear color (clear blue)
 	glClearColor(.6f, .6f, .8f, 1.f);
+	glEnable(GL_DEPTH_TEST);
 
 
 	shader.use();
@@ -151,26 +181,46 @@ int main()
 
 	glBindVertexArray(VAO);
 
+	// -----------------------------------------------------------------------------------
+	// MVP
+	glm::mat4 model(1.0f);
+	glm::mat4 view(1.0f);
+	glm::mat4 projection(1.0f);
+
+
+
+	glm::mat4 mvp = projection * view * model;
+
+
+	// -----------------------------------------------------------------------------------
+	// -----------------------------------------------------------------------------------
+
+
+
 	float angle = 0.01f;
 	float theta = 0.0f;
 	// -----------------------------------------------------------------------------------
 	// render loop
 	while (!glfwWindowShouldClose(window))
 	{
-
-		glm::mat4 transform(1.0f);
-		transform[0][0] = glm::cos(theta);
-		transform[0][1] = -glm::sin(theta);
-		transform[1][0] = glm::sin(theta);
-		transform[1][1] = glm::cos(theta);
-
-		shader.uniformMatrix4("transform", transform);
+		glm::mat4 model(1.0f);
+		model = glm::rotate(model, theta, glm::vec3(0.0f, 1.0f, 1.0f));
 		theta += angle;
 
+		glm::mat4 view(1.0f);
+		view = glm::translate(view, glm::vec3(0.0f, 0.0f, -3.0f));
+
+		glm::mat4 projection(1.0f);
+		projection = glm::perspective(glm::radians(45.0f), 800.0f / 600.0f, 0.1f, 100.0f);
+
+		glm::mat4 mvp = projection * view * model;
+
+		shader.uniformMatrix4("MVP", mvp);
+
 		// clear the screen with the clear color
-		glClear(GL_COLOR_BUFFER_BIT);
+		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 		
-		glDrawElements(GL_TRIANGLES, indices.size(), GL_UNSIGNED_BYTE, GL_NONE);
+		glDrawElements(GL_TRIANGLES, indices.size(), GL_UNSIGNED_INT, GL_NONE);
 
 		// compute events of the window
 		glfwPollEvents();
