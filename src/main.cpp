@@ -8,28 +8,6 @@ const int HEIGHT = 1280;
 const unsigned short OPENGL_MAJOR_VERSION = 4;
 const unsigned short OPENGL_MINOR_VERSION = 6;
 
-const char* vertexShaderSource =
-"#version 460 core\n"
-"layout (location = 0) in vec2 aPos;\n"
-"layout (location = 1) in vec2 aUV;\n"
-"out vec2 vUV;\n"
-"void main()\n"
-"{\n"
-"   gl_Position = vec4(aPos.x, aPos.y, 0.0, 1.0);\n"
-"   vUV = aUV;\n"
-
-"}\0";
-
-const char* fragmentShaderSource =
-"#version 460 core\n"
-"in vec2 vUV;\n"
-"out vec4 FragColor;\n"
-"uniform sampler2D texture0;\n"
-"void main()\n"
-"{\n"
-"    FragColor = texture(texture0, vUV);\n"
-"}\n";
-
 struct Vertex
 {
 	glm::vec2 pos;
