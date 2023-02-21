@@ -1,7 +1,8 @@
 #include "openglbase.h"
+#include "stb_image.h"
 
-const int WIDTH = 720;
-const int HEIGHT = 720;
+const int WIDTH = 1280;
+const int HEIGHT = 1280;
 
 const unsigned short OPENGL_MAJOR_VERSION = 4;
 const unsigned short OPENGL_MINOR_VERSION = 6;
@@ -22,9 +23,10 @@ const char* fragmentShaderSource =
 "#version 460 core\n"
 "in vec2 vUV;\n"
 "out vec4 FragColor;\n"
+"uniform sampler2D texture0;\n"
 "void main()\n"
 "{\n"
-"    FragColor = vec4(vUV.x, vUV.y, vUV.x, 1.0f);\n"
+"    FragColor = texture(texture0, vUV);\n"
 "}\n";
 
 struct Vertex
@@ -64,10 +66,10 @@ int main()
 
 	// define callback to window resizing
 	glfwSetFramebufferSizeCallback(window, [](GLFWwindow* window, int width, int height)
-		{
-			// specify the viewport : "size of the screen"
-			glViewport(0, 0, width, height);
-		});
+	{
+		// specify the viewport : "size of the screen"
+		glViewport(0, 0, width, height);
+	});
 	// ---------------------------------------------------------------------------------
 	// ---------------------------------------------------------------------------------
 
@@ -79,25 +81,26 @@ int main()
 	char infoLog[512];
 
 	vertexShader = glCreateShader(GL_VERTEX_SHADER);
-	glShaderSource(vertexShader, 1, &vertexShaderSource, GL_NONE);
+	// sets the source code in shader with one null terminated string
+	glShaderSource(vertexShader, 1, &vertexShaderSource, NULL);
 	glCompileShader(vertexShader);
 
 	glGetShaderiv(vertexShader, GL_COMPILE_STATUS, &success);
 	if (!success)
 	{
-		glGetShaderInfoLog(vertexShader, 512, GL_NONE, infoLog);
-		std::cout << "ERROR::SHADER::VERTEX::COMPILATION_FAILED\n" << infoLog << std::endl;
+		glGetShaderInfoLog(vertexShader, 512, NULL, infoLog);
+		throw std::runtime_error(infoLog);
 	}
 
 	fragmentShader = glCreateShader(GL_FRAGMENT_SHADER);
-	glShaderSource(fragmentShader, 1, &fragmentShaderSource, GL_NONE);
+	glShaderSource(fragmentShader, 1, &fragmentShaderSource, NULL);
 	glCompileShader(fragmentShader);
 
 	glGetShaderiv(fragmentShader, GL_COMPILE_STATUS, &success);
 	if (!success)
 	{
-		glGetShaderInfoLog(fragmentShader, 512, GL_NONE, infoLog);
-		std::cout << "ERROR::SHADER::FRAGMENT::COMPILATION_FAILED\n" << infoLog << std::endl;
+		glGetShaderInfoLog(fragmentShader, 512, NULL, infoLog);
+		throw std::runtime_error(infoLog);
 	}
 
 	shaderProgram = glCreateProgram();
@@ -107,8 +110,8 @@ int main()
 
 	glGetProgramiv(shaderProgram, GL_LINK_STATUS, &success);
 	if (!success) {
-		glGetProgramInfoLog(shaderProgram, 512, GL_NONE, infoLog);
-		std::cout << "ERROR::SHADER::PROGRAM::LINK_ERROR\n" << infoLog << std::endl;
+		glGetProgramInfoLog(shaderProgram, 512, NULL, infoLog);
+		throw std::runtime_error(infoLog);
 	}
 
 	glDeleteShader(vertexShader);
@@ -146,7 +149,7 @@ int main()
 	// bind the VBO to the VAO
 	glVertexArrayVertexBuffer(VAO, 0, VBO, 0, 4 * sizeof(float));
 
-	// enable atribute and define vertex format
+	// enable atribute and define vertex formats
 	glEnableVertexArrayAttrib(VAO, 0);
 	glVertexArrayAttribFormat(VAO, 0, 2, GL_FLOAT, false, 0);
 	glEnableVertexArrayAttrib(VAO, 1);
@@ -158,6 +161,40 @@ int main()
 
 	// bind the EBO to the VAO
 	glVertexArrayElementBuffer(VAO, EBO);
+	// -----------------------------------------------------------------------------------
+	// -----------------------------------------------------------------------------------
+
+
+	// -----------------------------------------------------------------------------------
+	// create texture
+	GLuint texture;
+	glCreateTextures(GL_TEXTURE_2D, 1, &texture);
+
+	// define texture wrapping (S,T like X,Y)
+	glTextureParameteri(texture, GL_TEXTURE_WRAP_S, GL_REPEAT);
+	glTextureParameteri(texture, GL_TEXTURE_WRAP_T, GL_REPEAT);
+
+	// set magnifying and minifying operations (when scaling up or downwards the image)
+	glTextureParameteri(texture, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+	glTextureParameteri(texture, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+
+	// use stb lib to read the image
+	stbi_set_flip_vertically_on_load(true);
+	int widthTexture, heightTexture, numColCh;
+	unsigned char* data = stbi_load("texture/magical.png", &widthTexture, &heightTexture, &numColCh, 0);
+	if (!data)
+	{
+		throw std::runtime_error("Failed to load texture");
+	}
+
+	// submit image information to the texture
+	glTextureStorage2D(texture, 1, GL_RGBA8, widthTexture, heightTexture);
+	glTextureSubImage2D(texture, 0, 0, 0, widthTexture, heightTexture, GL_RGBA, GL_UNSIGNED_BYTE, data);
+
+	// generate mipmap (ref to minifying operation)
+	glGenerateTextureMipmap(texture);
+
+	stbi_image_free(data);
 	// -----------------------------------------------------------------------------------
 	// -----------------------------------------------------------------------------------
 
@@ -174,7 +211,13 @@ int main()
 		glClear(GL_COLOR_BUFFER_BIT);
 
 		glUseProgram(shaderProgram);
+
+		// bind texture and add a int uniform with the texture unit
+		glBindTextureUnit(0, texture);
+		glUniform1i(glGetUniformLocation(shaderProgram, "texture0"), 0);
+
 		glBindVertexArray(VAO);
+		
 		glDrawElements(GL_TRIANGLES, indices.size(), GL_UNSIGNED_BYTE, GL_NONE);
 
 		// compute events of the window

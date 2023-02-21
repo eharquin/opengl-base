@@ -10,6 +10,7 @@ project(OpenGL-Base CXX)
 
 #set(ENABLE_ASSIMP   ON CACHE BOOL "Add Open Asset Import Library (assimp) to the project" FORCE)
 set(ENABLE_GLM   ON CACHE BOOL "Add GLM to the project" FORCE)
+set(ENABLE_STB   ON CACHE BOOL "Add STB to the project" FORCE)
 
 #===========================================================================================
 # GLAD CONFIGURATION
@@ -34,11 +35,14 @@ set_property(GLOBAL PROPERTY USE_FOLDERS OFF)
 
 # Set directory paths
 set(SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/src)
+set(TEXTURE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/texture)
+set(SHADER_DIR ${CMAKE_CURRENT_SOURCE_DIR}/shader)
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR})
 set(CMAKE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/cmake)
 
 set(SRC ${SOURCE_DIR}/main.cpp
-        ${SOURCE_DIR}/openglbase.h)
+        ${SOURCE_DIR}/openglbase.h 
+        ${SOURCE_DIR}/stb.cpp)
 
 add_executable(opengl-base ${SRC})
 
@@ -68,6 +72,11 @@ if (${ENABLE_GLM})
     LinkGLM(opengl-base PRIVATE)
 endif()
 
+if (${ENABLE_STB})
+    include(${CMAKE_DIR}/LinkSTB.cmake)
+    LinkSTB(opengl-base PRIVATE)
+endif()
+
 # Enable C++17
 set_target_properties(opengl-base PROPERTIES
     CXX_STANDARD 17
@@ -76,3 +85,7 @@ set_target_properties(opengl-base PROPERTIES
 
 # Set project folders
 set_target_properties(opengl-base PROPERTIES FOLDER ${PROJECT_NAME})
+
+# Copy resoures folder to the binary directory
+file(COPY ${TEXTURE_DIR} DESTINATION ${CMAKE_RUNTIME_OUTPUT_DIRECTORY})
+file(COPY ${SHADER_DIR} DESTINATION ${CMAKE_RUNTIME_OUTPUT_DIRECTORY})
