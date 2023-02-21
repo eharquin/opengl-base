@@ -1,5 +1,6 @@
 #include "openglbase.h"
 #include "stb_image.h"
+#include "shader.h"
 
 const int WIDTH = 1280;
 const int HEIGHT = 1280;
@@ -76,46 +77,7 @@ int main()
 
 	// ---------------------------------------------------------------------------------
 	// create vertexshader, fragmentshader, compile them and link to the shader program
-	GLuint fragmentShader, vertexShader, shaderProgram;
-	int success;
-	char infoLog[512];
-
-	vertexShader = glCreateShader(GL_VERTEX_SHADER);
-	// sets the source code in shader with one null terminated string
-	glShaderSource(vertexShader, 1, &vertexShaderSource, NULL);
-	glCompileShader(vertexShader);
-
-	glGetShaderiv(vertexShader, GL_COMPILE_STATUS, &success);
-	if (!success)
-	{
-		glGetShaderInfoLog(vertexShader, 512, NULL, infoLog);
-		throw std::runtime_error(infoLog);
-	}
-
-	fragmentShader = glCreateShader(GL_FRAGMENT_SHADER);
-	glShaderSource(fragmentShader, 1, &fragmentShaderSource, NULL);
-	glCompileShader(fragmentShader);
-
-	glGetShaderiv(fragmentShader, GL_COMPILE_STATUS, &success);
-	if (!success)
-	{
-		glGetShaderInfoLog(fragmentShader, 512, NULL, infoLog);
-		throw std::runtime_error(infoLog);
-	}
-
-	shaderProgram = glCreateProgram();
-	glAttachShader(shaderProgram, vertexShader);
-	glAttachShader(shaderProgram, fragmentShader);
-	glLinkProgram(shaderProgram);
-
-	glGetProgramiv(shaderProgram, GL_LINK_STATUS, &success);
-	if (!success) {
-		glGetProgramInfoLog(shaderProgram, 512, NULL, infoLog);
-		throw std::runtime_error(infoLog);
-	}
-
-	glDeleteShader(vertexShader);
-	glDeleteShader(fragmentShader);
+	Shader shader("shader/vertex.glsl", "shader/fragment.glsl");
 	// ---------------------------------------------------------------------------------
 	// ---------------------------------------------------------------------------------
 
@@ -210,11 +172,11 @@ int main()
 		// clear the screen with the clear color
 		glClear(GL_COLOR_BUFFER_BIT);
 
-		glUseProgram(shaderProgram);
+		shader.use();
 
 		// bind texture and add a int uniform with the texture unit
 		glBindTextureUnit(0, texture);
-		glUniform1i(glGetUniformLocation(shaderProgram, "texture0"), 0);
+		shader.uniform1i("texture0", 0);
 
 		glBindVertexArray(VAO);
 		
@@ -229,7 +191,11 @@ int main()
 	// -----------------------------------------------------------------------------------
 	// -----------------------------------------------------------------------------------
 
+	glDeleteTextures(1, &texture);
 
+	glDeleteVertexArrays(1, &VAO);
+	glDeleteBuffers(1, &EBO);
+	glDeleteBuffers(1, &VBO);
 
 	glfwDestroyWindow(window);
 	glfwTerminate();
