@@ -20,7 +20,7 @@ public:
 	Shader& operator=(const Shader&) = delete;
 	Shader& operator=(Shader&& other) = delete;
 
-	inline const GLuint id() const { return id_; }
+	GLuint id() const { return id_; }
 
 	std::string readShaderFile(const std::string& filePath);
 
