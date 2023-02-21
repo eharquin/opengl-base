@@ -9,18 +9,29 @@ const unsigned short OPENGL_MINOR_VERSION = 6;
 const char* vertexShaderSource =
 "#version 460 core\n"
 "layout (location = 0) in vec2 aPos;\n"
+"layout (location = 1) in vec2 aUV;\n"
+"out vec2 vUV;\n"
 "void main()\n"
 "{\n"
 "   gl_Position = vec4(aPos.x, aPos.y, 0.0, 1.0);\n"
+"   vUV = aUV;\n"
+
 "}\0";
 
 const char* fragmentShaderSource =
 "#version 460 core\n"
+"in vec2 vUV;\n"
 "out vec4 FragColor;\n"
 "void main()\n"
 "{\n"
-"    FragColor = vec4(.4f, 0.3f, 0.7f, 1.0f);\n"
+"    FragColor = vec4(vUV.x, vUV.y, vUV.x, 1.0f);\n"
 "}\n";
+
+struct Vertex
+{
+	glm::vec2 pos;
+	glm::vec2 uv;
+};
 
 int main()
 {
@@ -105,11 +116,11 @@ int main()
 	// ---------------------------------------------------------------------------------
 	// ---------------------------------------------------------------------------------
 
-	std::vector<glm::vec2> vertices = {
-		{-.75f, .5f },
-		{.75f, .5f },
-		{.75f, -.5f },
-		{-.75f, -.5f },
+	std::vector<Vertex> vertices = {
+		{ {-.75f,  .5f}, {0, 1} },
+		{ { .75f,  .5f}, {1, 1} },
+		{ { .75f, -.5f}, {1, 0} },
+		{ {-.75f, -.5f}, {0, 0} }
 	};
 
 	std::vector<GLubyte> indices = {
@@ -123,7 +134,7 @@ int main()
 
 	// create vertex buffer object to store raw vertices
 	glCreateBuffers(1, &VBO);
-	glNamedBufferData(VBO, vertices.size() * sizeof(glm::vec2), vertices.data(), GL_STATIC_DRAW);
+	glNamedBufferData(VBO, vertices.size() * sizeof(Vertex), vertices.data(), GL_STATIC_DRAW);
 
 	// create element buffer object to store indices
 	glCreateBuffers(1, &EBO);
@@ -133,14 +144,17 @@ int main()
 	glCreateVertexArrays(1, &VAO);
 
 	// bind the VBO to the VAO
-	glVertexArrayVertexBuffer(VAO, 0, VBO, 0, 2 * sizeof(float));
+	glVertexArrayVertexBuffer(VAO, 0, VBO, 0, 4 * sizeof(float));
 
 	// enable atribute and define vertex format
 	glEnableVertexArrayAttrib(VAO, 0);
 	glVertexArrayAttribFormat(VAO, 0, 2, GL_FLOAT, false, 0);
+	glEnableVertexArrayAttrib(VAO, 1);
+	glVertexArrayAttribFormat(VAO, 1, 2, GL_FLOAT, false, sizeof(glm::vec2));
 
-	// associate a vertex attribute and a vertex buffer binding for a VAO
+	// associate vertex attributes and vertex buffer binding for a VAO
 	glVertexArrayAttribBinding(VAO, 0, 0);
+	glVertexArrayAttribBinding(VAO, 1, 0);
 
 	// bind the EBO to the VAO
 	glVertexArrayElementBuffer(VAO, EBO);
