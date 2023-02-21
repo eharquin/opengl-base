@@ -68,24 +68,24 @@ int main()
 	char infoLog[512];
 
 	vertexShader = glCreateShader(GL_VERTEX_SHADER);
-	glShaderSource(vertexShader, 1, &vertexShaderSource, NULL);
+	glShaderSource(vertexShader, 1, &vertexShaderSource, GL_NONE);
 	glCompileShader(vertexShader);
 
 	glGetShaderiv(vertexShader, GL_COMPILE_STATUS, &success);
 	if (!success)
 	{
-		glGetShaderInfoLog(vertexShader, 512, NULL, infoLog);
+		glGetShaderInfoLog(vertexShader, 512, GL_NONE, infoLog);
 		std::cout << "ERROR::SHADER::VERTEX::COMPILATION_FAILED\n" << infoLog << std::endl;
 	}
 
 	fragmentShader = glCreateShader(GL_FRAGMENT_SHADER);
-	glShaderSource(fragmentShader, 1, &fragmentShaderSource, NULL);
+	glShaderSource(fragmentShader, 1, &fragmentShaderSource, GL_NONE);
 	glCompileShader(fragmentShader);
 
 	glGetShaderiv(fragmentShader, GL_COMPILE_STATUS, &success);
 	if (!success)
 	{
-		glGetShaderInfoLog(fragmentShader, 512, NULL, infoLog);
+		glGetShaderInfoLog(fragmentShader, 512, GL_NONE, infoLog);
 		std::cout << "ERROR::SHADER::FRAGMENT::COMPILATION_FAILED\n" << infoLog << std::endl;
 	}
 
@@ -96,7 +96,7 @@ int main()
 
 	glGetProgramiv(shaderProgram, GL_LINK_STATUS, &success);
 	if (!success) {
-		glGetProgramInfoLog(shaderProgram, 512, NULL, infoLog);
+		glGetProgramInfoLog(shaderProgram, 512, GL_NONE, infoLog);
 		std::cout << "ERROR::SHADER::PROGRAM::LINK_ERROR\n" << infoLog << std::endl;
 	}
 
@@ -106,28 +106,44 @@ int main()
 	// ---------------------------------------------------------------------------------
 
 	std::vector<glm::vec2> vertices = {
-		{.0f, .5f },
-		{-.5f, -.5f },
-		{.5f, -.5f },
+		{-.75f, .5f },
+		{.75f, .5f },
+		{.75f, -.5f },
+		{-.75f, -.5f },
+	};
+
+	std::vector<GLubyte> indices = {
+		0, 1 ,2,
+		0, 2, 3
 	};
 
 	// -----------------------------------------------------------------------------------
 	// create vertex buffer object and vertex arrays
-	GLuint VBO, VAO;
+	GLuint VBO, VAO, EBO;
 
 	// create vertex buffer object to store raw vertices
 	glCreateBuffers(1, &VBO);
 	glNamedBufferData(VBO, vertices.size() * sizeof(glm::vec2), vertices.data(), GL_STATIC_DRAW);
 
+	// create element buffer object to store indices
+	glCreateBuffers(1, &EBO);
+	glNamedBufferData(EBO, indices.size() * sizeof(GLubyte), indices.data(), GL_STATIC_DRAW);
+
 	// create vertex array to store the organized vertices
 	glCreateVertexArrays(1, &VAO);
 
-
+	// bind the VBO to the VAO
 	glVertexArrayVertexBuffer(VAO, 0, VBO, 0, 2 * sizeof(float));
 
+	// enable atribute and define vertex format
 	glEnableVertexArrayAttrib(VAO, 0);
 	glVertexArrayAttribFormat(VAO, 0, 2, GL_FLOAT, false, 0);
+
+	// associate a vertex attribute and a vertex buffer binding for a VAO
 	glVertexArrayAttribBinding(VAO, 0, 0);
+
+	// bind the EBO to the VAO
+	glVertexArrayElementBuffer(VAO, EBO);
 	// -----------------------------------------------------------------------------------
 	// -----------------------------------------------------------------------------------
 
@@ -145,7 +161,7 @@ int main()
 
 		glUseProgram(shaderProgram);
 		glBindVertexArray(VAO);
-		glDrawArrays(GL_TRIANGLES, 0, vertices.size());
+		glDrawElements(GL_TRIANGLES, indices.size(), GL_UNSIGNED_BYTE, GL_NONE);
 
 		// compute events of the window
 		glfwPollEvents();
