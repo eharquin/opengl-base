@@ -19,7 +19,7 @@ int main()
 	glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, OPENGL_MAJOR_VERSION);
 	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, OPENGL_MINOR_VERSION);
 	glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
-	glfwWindowHint(GLFW_RESIZABLE, GLFW_FALSE);
+	//glfwWindowHint(GLFW_RESIZABLE, GLFW_FALSE);
 
 	// create window (define the viewport by default)
 	GLFWwindow* window = glfwCreateWindow(WIDTH, HEIGHT, "OPENGLBASE", NULL, NULL);
@@ -181,46 +181,49 @@ int main()
 
 	glBindVertexArray(VAO);
 
-	// -----------------------------------------------------------------------------------
-	// MVP
-	glm::mat4 model(1.0f);
-	glm::mat4 view(1.0f);
-	glm::mat4 projection(1.0f);
+	glm::vec3 cubePositions[] = {
+		glm::vec3(0.0f,  0.0f,  0.0f),
+		glm::vec3(2.0f,  5.0f, -15.0f),
+		glm::vec3(-1.5f, -2.2f, -2.5f),
+		glm::vec3(-3.8f, -2.0f, -12.3f),
+		glm::vec3(2.4f, -0.4f, -3.5f),
+		glm::vec3(-1.7f,  3.0f, -7.5f),
+		glm::vec3(1.3f, -2.0f, -2.5f),
+		glm::vec3(1.5f,  2.0f, -2.5f),
+		glm::vec3(1.5f,  0.2f, -1.5f),
+		glm::vec3(-1.3f,  1.0f, -1.5f)
+	};
 
 
-
-	glm::mat4 mvp = projection * view * model;
-
-
-	// -----------------------------------------------------------------------------------
-	// -----------------------------------------------------------------------------------
-
-
-
-	float angle = 0.01f;
+	float angle = 0.001f;
 	float theta = 0.0f;
 	// -----------------------------------------------------------------------------------
 	// render loop
 	while (!glfwWindowShouldClose(window))
 	{
-		glm::mat4 model(1.0f);
-		model = glm::rotate(model, theta, glm::vec3(0.0f, 1.0f, 1.0f));
-		theta += angle;
-
-		glm::mat4 view(1.0f);
-		view = glm::translate(view, glm::vec3(0.0f, 0.0f, -3.0f));
-
-		glm::mat4 projection(1.0f);
-		projection = glm::perspective(glm::radians(45.0f), float(WIDTH) / HEIGHT, 0.1f, 100.0f);
-
-		glm::mat4 mvp = projection * view * model;
-
-		shader.uniformMatrix4("MVP", mvp);
-
 		// clear the screen with the clear color
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-		
-		glDrawElements(GL_TRIANGLES, indices.size(), GL_UNSIGNED_INT, GL_NONE);
+
+		for (unsigned int i = 0; i < 10; i++)
+		{
+			glm::mat4 model(1.0f);
+			model = glm::translate(model, cubePositions[i]);
+			model = glm::rotate(model, theta, glm::vec3(1.0f, .3f, .5f));
+			theta += angle;
+
+			glm::mat4 view(1.0f);
+			view = glm::translate(view, glm::vec3(0.0f, 0.0f, -3.0f));
+
+			glm::mat4 projection(1.0f);
+			projection = glm::perspective(glm::radians(45.0f), float(WIDTH) / HEIGHT, 0.1f, 100.0f);
+
+			glm::mat4 mvp = projection * view * model;
+
+			shader.uniformMatrix4("MVP", mvp);
+
+
+			glDrawElements(GL_TRIANGLES, indices.size(), GL_UNSIGNED_INT, GL_NONE);
+		}
 
 		// compute events of the window
 		glfwPollEvents();
