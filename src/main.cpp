@@ -135,7 +135,7 @@ int main()
 
 	// create vertex buffer object to store raw vertices
 	glCreateBuffers(1, &VBO);
-	glNamedBufferData(VBO, vertices.size() * sizeof(glm::vec2), vertices.data(), GL_STATIC_DRAW);
+	glNamedBufferData(VBO, vertices.size() * sizeof(glm::vec2), vertices.data(), GL_DYNAMIC_DRAW);
 
 	// create vertex array to store the organized vertices
 	glCreateVertexArrays(1, &VAO);
@@ -156,8 +156,20 @@ int main()
 
 	// -----------------------------------------------------------------------------------
 	// render loop
+	float theta = .01f;
 	while (!glfwWindowShouldClose(window))
 	{	
+
+		for (int i = 0; i < vertices.size(); i++)
+		{
+			float x = vertices[i].x * glm::cos(theta) - vertices[i].y * glm::sin(theta);
+			float y = vertices[i].x * glm::sin(theta) + vertices[i].y * glm::cos(theta);
+
+			vertices[i].x = x;
+			vertices[i].y = y;
+		}
+		glNamedBufferData(VBO, vertices.size() * sizeof(glm::vec2), vertices.data(), GL_DYNAMIC_DRAW);
+
 		// clear the screen with the clear color
 		glClear(GL_COLOR_BUFFER_BIT);
 
