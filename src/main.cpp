@@ -1,7 +1,7 @@
 #include "openglbase.h"
 
-const int WIDTH = 800;
-const int HEIGHT = 800;
+const int WIDTH = 720;
+const int HEIGHT = 720;
 
 const unsigned short OPENGL_MAJOR_VERSION = 4;
 const unsigned short OPENGL_MINOR_VERSION = 6;
