@@ -143,20 +143,32 @@ int main()
 	glClearColor(.6f, .6f, .8f, 1.f);
 
 
+	shader.use();
+
+	// bind texture and add a int uniform with the texture unit
+	glBindTextureUnit(0, texture);
+	shader.uniform1i("texture0", 0);
+
+	glBindVertexArray(VAO);
+
+	float angle = 0.01f;
+	float theta = 0.0f;
 	// -----------------------------------------------------------------------------------
 	// render loop
 	while (!glfwWindowShouldClose(window))
 	{
+
+		glm::mat4 transform(1.0f);
+		transform[0][0] = glm::cos(theta);
+		transform[0][1] = -glm::sin(theta);
+		transform[1][0] = glm::sin(theta);
+		transform[1][1] = glm::cos(theta);
+
+		shader.uniformMatrix4("transform", transform);
+		theta += angle;
+
 		// clear the screen with the clear color
 		glClear(GL_COLOR_BUFFER_BIT);
-
-		shader.use();
-
-		// bind texture and add a int uniform with the texture unit
-		glBindTextureUnit(0, texture);
-		shader.uniform1i("texture0", 0);
-
-		glBindVertexArray(VAO);
 		
 		glDrawElements(GL_TRIANGLES, indices.size(), GL_UNSIGNED_BYTE, GL_NONE);
 

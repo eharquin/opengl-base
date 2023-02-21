@@ -27,4 +27,5 @@ public:
 	void use();
 
 	void uniform1i(const std::string& name, int value);
+	void uniformMatrix4(const std::string& name, glm::mat4 value);
 };
