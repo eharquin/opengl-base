@@ -3,8 +3,8 @@
 #include "shader.h"
 #include "camera.h"
 
-const int WIDTH = 1280;
-const int HEIGHT = 1280;
+const int WIDTH = 800;
+const int HEIGHT = 600;
 
 const unsigned short OPENGL_MAJOR_VERSION = 4;
 const unsigned short OPENGL_MINOR_VERSION = 6;
@@ -197,36 +197,52 @@ int main()
 
 	Camera camera;
 	camera.setViewTarget(glm::vec3(0.0f, 0.0f, -3.0f), glm::vec3(0.0f, 0.0f, 0.0f));
+	camera.setOrthographicProjection(-5.0f, 5.0f, -5.0f, 5.0f, 0.1f, 100.0f);
+
+	// time between current frame and laqt frame
+	float deltaTime = 0.0f;
+	// time of last frame
+	float lastFrame = 0.0f;
 
 
-	float angle = 0.001f;
+
+	float angle = 0.1f;
 	float theta = 0.0f;
 	glm::vec3 cameraPosition(0.f);
-	float radius = 50.0f;
+	float radius = 10.0f;
 	// -----------------------------------------------------------------------------------
 	// render loop
 	while (!glfwWindowShouldClose(window))
 	{
+		// per-frame time logic
+		// --------------------
+		float currentFrame = glfwGetTime();
+		deltaTime = currentFrame - lastFrame;
+		lastFrame = currentFrame;
+
 		// clear the screen with the clear color
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 		cameraPosition.x = cos(theta) * radius;
 		cameraPosition.z = sin(theta) * radius;
 
-		camera.setViewTarget(glm::vec3(cameraPosition), glm::vec3(0.0f, 0.0f, 0.0f));
+		camera.setViewTarget(cameraPosition, glm::vec3(0.0f, 0.0f, 0.0f));
 
 		for (unsigned int i = 0; i < 10; i++)
 		{
 			glm::mat4 model(1.0f);
 			model = glm::translate(model, cubePositions[i]);
 			model = glm::rotate(model, theta, glm::vec3(1.0f, .3f, .5f));
-			theta += angle;
+			theta += angle * deltaTime;
 
 			glm::mat4 view(1.0f);
 			view = camera.view();
 
 			glm::mat4 projection(1.0f);
 			projection = glm::perspective(glm::radians(45.0f), float(WIDTH) / HEIGHT, 0.1f, 100.0f);
+			//projection = glm::ortho(-5.0f, 5.0f, -5.0f, 5.0f, 0.1f, 100.0f);
+			//projection = camera.projection();
+
 
 			glm::mat4 mvp = projection * view * model;
 

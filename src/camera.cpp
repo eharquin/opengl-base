@@ -71,3 +71,178 @@ void Camera::setViewTarget(glm::vec3 cameraPosition, glm::vec3 cameraTarget, glm
 {
 	setViewDirection(cameraPosition, cameraPosition - cameraTarget, worldUp);
 }
+
+void Camera::setOrthographicProjection(float left, float right, float bottom, float top, float near, float far)
+{
+
+	glm::mat4 scaleToCanonicalViewVolume(1.0f);
+	scaleToCanonicalViewVolume[0][0] = 2 / (right - left);
+	scaleToCanonicalViewVolume[1][1] = 2 / (top - bottom);
+	scaleToCanonicalViewVolume[2][2] = -2 / (far - near);
+
+	//   2/(r-l)   0      0     0
+	//      0   2/(t-b)   0     0
+	//      0      0   2/(n-f)  0
+	//      0      0      0     1
+	// openGL canonical view volume : -1 1 -1 1 -1 1
+
+	glm::vec3 centerFromOrigin;
+	centerFromOrigin.x = (right + left) / 2;
+	centerFromOrigin.y = (top + bottom) / 2;
+	centerFromOrigin.z = near;
+
+	//   (right + left) / 2
+	//   (top + bottom) / 2
+	//         near
+
+	glm::mat4 translateToOrigin(1.0f);
+	translateToOrigin[3][0] = -centerFromOrigin.x;
+	translateToOrigin[3][1] = -centerFromOrigin.y;
+	translateToOrigin[3][2] = -centerFromOrigin.z;
+
+	//   1  0  0  -x
+	//   0  1  0  -y
+	//   0  0  1  -z
+	//   0  0  0   1
+
+	projection_ = scaleToCanonicalViewVolume * translateToOrigin;
+
+	//   2/(r-l)     0        0     -(r+l)/(r-l)
+	//      0     2/(t-b)     0     -(t+b)/(t-b)
+	//      0        0     2/(n-f)    -2n/(n-f)
+	//      0        0        0          1
+}
+
+void Camera::setPerspectiveProjection(float fov, float aspectRatio, float near, float far)
+{
+	// project x and y from the viewing frustrum to the near plane
+	// x     (x/z)*n
+	// y  => (y/z)*n
+	// z       z
+	// 1       1
+
+	// ==>> IMPOSSIBLE BECAUSE ON A MAT4 * VECTOR WE CANNOT DIVIDE BY AN INPUT VALUE
+
+	// SOLUTION : HOMOGENEOUS COORDINATES
+
+	// x                          x/w
+	// y  =after vertex shader=>  y/w
+	// z                          z/w
+	// w       
+
+	// 1     10     2
+	// 2  =  20  =  4
+	// 3     30     6
+	// 1     10     2
+
+	// THIS DIVISION IS DIRECTLY APPLIED on the gl_position variable output from the vertex shader
+
+	//    n   0   0   0
+	//    0   n   0   0
+	//    0   0   1   0
+	//    0   0   1   0
+
+	// x      x*n                          (xn)/z
+	// y  =>  y*n  =after vertex shader=>  (yn)/z
+	// z       z                            z/z ==> PROBLEM HERE : LOST DEPTH INFORMATION
+	// 1       z                             
+
+
+	// x      x*n                          (xn)/z
+	// y  =>  y*n  =after vertex shader=>  (yn)/z
+	// z       z²                           z²/z ==> z
+	// 1       z                             
+
+	//    n   0   0    0
+	//    0   n   0    0
+	//    0   0   m1   m2
+	//    0   0   1    0
+
+	// z² = m1*z + m2*1
+	// QUADRATIC EQUATION WITH AT MOST TWO REAL SOLUTIONS : true for only two z values
+
+	// we need to add two constraints: only true when z=near or z=far
+	// ==> transformations will not change the z value for points on a near and far planes 
+	// BUT all others z values will be wraped non-linearly.
+
+
+	// this results in two equations :
+	
+	// m1 * n + m2 = n²
+	// m1 * f + m2 = f²
+
+	// m1 = f + n
+	// m2 = -fn
+
+
+	//    n   0    0     0
+	//    0   n    0     0
+	//    0   0   f+n   -fn
+	//    0   0    1     0
+
+
+	// x          x*n                                 (xn)/z
+	// y  =>      y*n      =after vertex shader=>     (yn)/z
+	// z       z(f+n)-fn                            f+n-(fn/z)  ==> z
+	// 1           z                             
+
+
+	// matrix from a frustrum view volume to a orthographic view volume
+	glm::mat4 perspective(1.0f);
+	perspective[0][0] = near;
+	perspective[1][1] = near;
+	perspective[2][2] = far + near;
+	perspective[3][2] = -(far * near);
+	perspective[2][3] = 1.0f;
+	perspective[3][3] = 0.0f;
+
+	//    n   0    0     0
+	//    0   n    0     0
+	//    0   0   f+n   -fn
+	//    0   0    1     0
+
+
+	// transformation from the view volume to the canonical view volume (see ortho function)
+	// 
+	//   2/(r-l)     0        0     -(r+l)/(r-l)
+	//      0     2/(t-b)     0     -(t+b)/(t-b)
+	//      0        0     2/(n-f)    -2n/(n-f)
+	//      0        0        0          1
+
+
+	// We assume frustrum is centered on the z-axis
+	// r = -l
+	// t = -b
+	// then :
+	// r + l = 0
+	// r - l = 2r
+	// t + b = 0
+	// t - b = 2t
+	
+	//      r     0        0          0
+	//      0     t        0          0
+	//      0     0     2/(n-f)    -2n/(n-f)
+	//      0     0        0          1
+
+
+	// use a vertical Field Of View : angle from the bottom to the top of the near plane
+	// + the aspet ratio of the near plane : width/height
+
+	// t = n * tan(theta/2)
+	// r = n*a_r*tan(theta/2)
+	 
+	// n*a_r*tan(theta/2)         0                0          0
+	//        0            n * tan(theta/2)        0          0
+	//        0                   0              2/(n-f)    -2n/(n-f)
+	//        0                   0                0          1
+
+
+	glm::mat4 projection(1.0f);
+	projection[0][0] = near * aspectRatio * glm::tan(fov / 2);
+	projection[1][1] = near * tan(fov / 2);
+	projection[2][2] = 2 / (near - far);
+	projection[3][2] = -(2 * near) / (near - far);
+
+
+	projection_ = projection * perspective;
+}
