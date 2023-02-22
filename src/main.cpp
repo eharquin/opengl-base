@@ -1,6 +1,7 @@
 #include "openglbase.h"
 #include "stb_image.h"
 #include "shader.h"
+#include "camera.h"
 
 const int WIDTH = 1280;
 const int HEIGHT = 1280;
@@ -194,15 +195,25 @@ int main()
 		glm::vec3(-1.3f,  1.0f, -1.5f)
 	};
 
+	Camera camera;
+	camera.setViewTarget(glm::vec3(0.0f, 0.0f, -3.0f), glm::vec3(0.0f, 0.0f, 0.0f));
+
 
 	float angle = 0.001f;
 	float theta = 0.0f;
+	glm::vec3 cameraPosition(0.f);
+	float radius = 50.0f;
 	// -----------------------------------------------------------------------------------
 	// render loop
 	while (!glfwWindowShouldClose(window))
 	{
 		// clear the screen with the clear color
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+		cameraPosition.x = cos(theta) * radius;
+		cameraPosition.z = sin(theta) * radius;
+
+		camera.setViewTarget(glm::vec3(cameraPosition), glm::vec3(0.0f, 0.0f, 0.0f));
 
 		for (unsigned int i = 0; i < 10; i++)
 		{
@@ -212,7 +223,7 @@ int main()
 			theta += angle;
 
 			glm::mat4 view(1.0f);
-			view = glm::translate(view, glm::vec3(0.0f, 0.0f, -3.0f));
+			view = camera.view();
 
 			glm::mat4 projection(1.0f);
 			projection = glm::perspective(glm::radians(45.0f), float(WIDTH) / HEIGHT, 0.1f, 100.0f);

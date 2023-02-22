@@ -41,10 +41,12 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR})
 set(CMAKE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/cmake)
 
 set(SRC ${SOURCE_DIR}/main.cpp
-        ${SOURCE_DIR}/openglbase.h 
+        ${SOURCE_DIR}/openglbase.h
         ${SOURCE_DIR}/stb.cpp 
         ${SOURCE_DIR}/shader.h
-        ${SOURCE_DIR}/shader.cpp)
+        ${SOURCE_DIR}/shader.cpp
+        ${SOURCE_DIR}/camera.h
+        ${SOURCE_DIR}/camera.cpp)
 
 add_executable(opengl-base ${SRC})
 
