@@ -78,46 +78,46 @@ void Camera::setOrthographicProjection(float left, float right, float bottom, fl
 	glm::mat4 scaleToCanonicalViewVolume(1.0f);
 	scaleToCanonicalViewVolume[0][0] = 2 / (right - left);
 	scaleToCanonicalViewVolume[1][1] = 2 / (top - bottom);
-	scaleToCanonicalViewVolume[2][2] = -2 / (far - near);
+	scaleToCanonicalViewVolume[2][2] = 2 / (near - far);
 
-	//   2/(r-l)   0      0     0
-	//      0   2/(t-b)   0     0
-	//      0      0   2/(n-f)  0
-	//      0      0      0     1
+	//   2/(r-l)   0       0      0
+	//      0   2/(t-b)    0      0
+	//      0      0     2/(n-f)  0
+	//      0      0       0      1
 	// openGL canonical view volume : -1 1 -1 1 -1 1
 
 	glm::vec3 centerFromOrigin;
 	centerFromOrigin.x = (right + left) / 2;
 	centerFromOrigin.y = (top + bottom) / 2;
-	centerFromOrigin.z = near;
+	centerFromOrigin.z = (near + far) / 2;
 
 	//   (right + left) / 2
 	//   (top + bottom) / 2
-	//         near
+	//   (near + far) / 2
 
 	glm::mat4 translateToOrigin(1.0f);
 	translateToOrigin[3][0] = -centerFromOrigin.x;
 	translateToOrigin[3][1] = -centerFromOrigin.y;
-	translateToOrigin[3][2] = -centerFromOrigin.z;
+	translateToOrigin[3][2] = centerFromOrigin.z;
 
-	//   1  0  0  -x
-	//   0  1  0  -y
-	//   0  0  1  -z
-	//   0  0  0   1
+	//   1  0  0  -(right + left) / 2
+	//   0  1  0  -(top + bottom) / 2
+	//   0  0  1   (near + far) / 2
+	//   0  0  0          1
 
 	projection_ = scaleToCanonicalViewVolume * translateToOrigin;
 
-	//   2/(r-l)     0        0     -(r+l)/(r-l)
-	//      0     2/(t-b)     0     -(t+b)/(t-b)
-	//      0        0     2/(n-f)    -2n/(n-f)
-	//      0        0        0          1
+	//   2/(r-l)     0        0        -(r+l)/(r-l)
+	//      0     2/(t-b)     0        -(t+b)/(t-b)
+	//      0        0     2/(n-f)      (n+f)/(n-f)
+	//      0        0        0              1
 }
 
 void Camera::setPerspectiveProjection(float fov, float aspectRatio, float near, float far)
 {
 	// project x and y from the viewing frustrum to the near plane
-	// x     (x/z)*n
-	// y  => (y/z)*n
+	// x     (nx/-z)
+	// y  => (ny/-z)
 	// z       z
 	// 1       1
 
@@ -139,24 +139,24 @@ void Camera::setPerspectiveProjection(float fov, float aspectRatio, float near, 
 
 	//    n   0   0   0
 	//    0   n   0   0
-	//    0   0   1   0
-	//    0   0   1   0
+	//    0   0   -1   0
+	//    0   0   -1   0
 
-	// x      x*n                          (xn)/z
-	// y  =>  y*n  =after vertex shader=>  (yn)/z
-	// z       z                            z/z ==> PROBLEM HERE : LOST DEPTH INFORMATION
-	// 1       z                             
+	// x      x*n                          (xn)/-z
+	// y  =>  y*n  =after vertex shader=>  (yn)/-z
+	// z       -z                            -z/-z ==> PROBLEM HERE : LOST DEPTH INFORMATION
+	// 1       -z                             
 
 
-	// x      x*n                          (xn)/z
-	// y  =>  y*n  =after vertex shader=>  (yn)/z
-	// z       z²                           z²/z ==> z
-	// 1       z                             
+	// x      x*n                          (xn)/-z
+	// y  =>  y*n  =after vertex shader=>  (yn)/-z
+	// z       -z²                           -z²/-z ==> z
+	// 1       -z                             
 
 	//    n   0   0    0
 	//    0   n   0    0
 	//    0   0   m1   m2
-	//    0   0   1    0
+	//    0   0   -1    0
 
 	// z² = m1*z + m2*1
 	// QUADRATIC EQUATION WITH AT MOST TWO REAL SOLUTIONS : true for only two z values
@@ -171,20 +171,20 @@ void Camera::setPerspectiveProjection(float fov, float aspectRatio, float near, 
 	// m1 * n + m2 = n²
 	// m1 * f + m2 = f²
 
-	// m1 = f + n
-	// m2 = -fn
+	// m1 = - f - n
+	// m2 = fn
 
 
 	//    n   0    0     0
 	//    0   n    0     0
-	//    0   0   f+n   -fn
-	//    0   0    1     0
+	//    0   0   -f-n   fn
+	//    0   0    -1     0
 
 
-	// x          x*n                                 (xn)/z
-	// y  =>      y*n      =after vertex shader=>     (yn)/z
-	// z       z(f+n)-fn                            f+n-(fn/z)  ==> z
-	// 1           z                             
+	// x          x*n                                 (xn)/-z
+	// y  =>      y*n      =after vertex shader=>     (yn)/-z
+	// z       -zf-zn+fn                             (-zf-nz+fn)/-z  ==> z
+	// 1           -z                             
 
 
 	// matrix from a frustrum view volume to a orthographic view volume
@@ -192,22 +192,22 @@ void Camera::setPerspectiveProjection(float fov, float aspectRatio, float near, 
 	perspective[0][0] = near;
 	perspective[1][1] = near;
 	perspective[2][2] = far + near;
-	perspective[3][2] = -(far * near);
-	perspective[2][3] = 1.0f;
+	perspective[3][2] = far * near;
+	perspective[2][3] = -1.0f;
 	perspective[3][3] = 0.0f;
 
 	//    n   0    0     0
 	//    0   n    0     0
-	//    0   0   f+n   -fn
-	//    0   0    1     0
+	//    0   0   -f-n   fn
+	//    0   0    -1     0
 
 
 	// transformation from the view volume to the canonical view volume (see ortho function)
-	// 
-	//   2/(r-l)     0        0     -(r+l)/(r-l)
-	//      0     2/(t-b)     0     -(t+b)/(t-b)
-	//      0        0     2/(n-f)    -2n/(n-f)
-	//      0        0        0          1
+	//
+	//   2/(r-l)     0        0        -(r+l)/(r-l)
+	//      0     2/(t-b)     0        -(t+b)/(t-b)
+	//      0        0     2/(n-f)      (n+f)/(n-f)
+	//      0        0        0              1
 
 
 	// We assume frustrum is centered on the z-axis
@@ -219,30 +219,50 @@ void Camera::setPerspectiveProjection(float fov, float aspectRatio, float near, 
 	// t + b = 0
 	// t - b = 2t
 	
-	//      r     0        0          0
-	//      0     t        0          0
-	//      0     0     2/(n-f)    -2n/(n-f)
-	//      0     0        0          1
+	//     1/r     0         0          0
+	//      0     1/t        0          0
+	//      0      0      2/(n-f)    (n+f)/(n-f)
+	//      0      0         0          1
 
 
 	// use a vertical Field Of View : angle from the bottom to the top of the near plane
 	// + the aspet ratio of the near plane : width/height
 
-	// t = n * tan(theta/2)
-	// r = n*a_r*tan(theta/2)
+	// t = n*tan(fov/2)
+	// r = n*a_r*tan(fov/2)
 	 
-	// n*a_r*tan(theta/2)         0                0          0
-	//        0            n * tan(theta/2)        0          0
-	//        0                   0              2/(n-f)    -2n/(n-f)
-	//        0                   0                0          1
+																							//    n   0    0      0
+																							//    0   n    0      0
+																							//    0   0   f+n     fn
+																							//    0   0    -1     0
+
+
+	//   1/(n * a_r * tan(fov/2))             0                   0            0
+	//            0                  1/(n * tan(fov/2))           0            0
+	//            0                           0                2/(n-f)    (n+f)/(n-f)
+	//            0                           0                   0            1
+
 
 
 	glm::mat4 projection(1.0f);
-	projection[0][0] = near * aspectRatio * glm::tan(fov / 2);
-	projection[1][1] = near * tan(fov / 2);
+	projection[0][0] = 1 / (near * aspectRatio * glm::tan(fov / 2));
+	projection[1][1] = 1 / (near * tan(fov / 2));
 	projection[2][2] = 2 / (near - far);
-	projection[3][2] = -(2 * near) / (near - far);
+	projection[3][2] = (near + far) / (near - far);
+	projection[3][3] = 1.0f;
 
 
+
+	//projection_ = perspective * projection;
 	projection_ = projection * perspective;
+
+	//projection_ = glm::mat4(1.0f);
+	//projection_[0][0] = near / (aspectRatio * glm::tan(fov / 2));
+	//projection_[1][1] = near / tan(fov / 2);
+	//projection_[2][2] = -((far + near) / (far - near));
+	//projection_[3][2] = -2 * far * near / (far - near);
+	//projection_[2][3] = -1.0f;
+	//projection_[3][3] = 0.0f;
+
+
 }

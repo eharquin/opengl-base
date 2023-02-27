@@ -197,7 +197,6 @@ int main()
 
 	Camera camera;
 	camera.setViewTarget(glm::vec3(0.0f, 0.0f, -3.0f), glm::vec3(0.0f, 0.0f, 0.0f));
-	camera.setOrthographicProjection(-5.0f, 5.0f, -5.0f, 5.0f, 0.1f, 100.0f);
 
 	// time between current frame and laqt frame
 	float deltaTime = 0.0f;
@@ -239,9 +238,11 @@ int main()
 			view = camera.view();
 
 			glm::mat4 projection(1.0f);
-			projection = glm::perspective(glm::radians(45.0f), float(WIDTH) / HEIGHT, 0.1f, 100.0f);
 			//projection = glm::ortho(-5.0f, 5.0f, -5.0f, 5.0f, 0.1f, 100.0f);
-			//projection = camera.projection();
+			//camera.setOrthographicProjection(-5.0f, 5.0f, -5.0f, 5.0f, 0.1f, 100.0f);
+			//projection = glm::perspective(glm::radians(45.0f), float(WIDTH) / HEIGHT, 0.1f, 100.0f);
+			camera.setPerspectiveProjection(glm::radians(45.0f), (float)WIDTH / HEIGHT, 0.1f, 100.0f);
+			projection = camera.projection();
 
 
 			glm::mat4 mvp = projection * view * model;
