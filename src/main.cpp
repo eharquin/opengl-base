@@ -9,6 +9,10 @@ const int HEIGHT = 600;
 const unsigned short OPENGL_MAJOR_VERSION = 4;
 const unsigned short OPENGL_MINOR_VERSION = 6;
 
+
+glm::vec3 cameraPosition(0.0f);
+glm::vec3 cameraDirection(0.0f);
+
 int main()
 {
 	// ---------------------------------------------------------------------------------
@@ -195,6 +199,8 @@ int main()
 		glm::vec3(-1.3f,  1.0f, -1.5f)
 	};
 
+	cameraDirection = glm::vec3 (0.0f, 0.0f, -1.0f);
+
 	Camera camera;
 	camera.setViewTarget(glm::vec3(0.0f, 0.0f, -3.0f), glm::vec3(0.0f, 0.0f, 0.0f));
 
@@ -205,9 +211,9 @@ int main()
 
 
 
-	float angle = 0.1f;
+	float angle = 0.05f;
 	float theta = 0.0f;
-	glm::vec3 cameraPosition(0.f);
+	
 	float radius = 10.0f;
 	// -----------------------------------------------------------------------------------
 	// render loop
@@ -222,8 +228,8 @@ int main()
 		// clear the screen with the clear color
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-		cameraPosition.x = cos(theta) * radius;
-		cameraPosition.z = sin(theta) * radius;
+		cameraPosition.x = sin(theta) * radius;
+		cameraPosition.z = cos(theta) * radius;
 
 		camera.setViewTarget(cameraPosition, glm::vec3(0.0f, 0.0f, 0.0f));
 
@@ -240,7 +246,7 @@ int main()
 			glm::mat4 projection(1.0f);
 			//projection = glm::ortho(-5.0f, 5.0f, -5.0f, 5.0f, 0.1f, 100.0f);
 			//camera.setOrthographicProjection(-5.0f, 5.0f, -5.0f, 5.0f, 0.1f, 100.0f);
-			//projection = glm::perspective(glm::radians(45.0f), float(WIDTH) / HEIGHT, 0.1f, 100.0f);
+			projection = glm::perspective(glm::radians(45.0f), float(WIDTH) / HEIGHT, 0.1f, 100.0f);
 			camera.setPerspectiveProjection(glm::radians(45.0f), (float)WIDTH / HEIGHT, 0.1f, 100.0f);
 			projection = camera.projection();
 
