@@ -127,8 +127,8 @@ void Camera::setOrthographicProjection(float left, float right, float bottom, fl
 void Camera::setPerspectiveProjection(float fov, float aspectRatio, float near, float far)
 {
 	// project x and y from the viewing frustrum to the near plane
-	// x     (nx/z)
-	// y  => (ny/z)
+	// x     (nx/-z)
+	// y  => (ny/-z)
 	// z       z
 	// 1       1
 
@@ -153,15 +153,15 @@ void Camera::setPerspectiveProjection(float fov, float aspectRatio, float near, 
 	//    0   0   1   0
 	//    0   0   1   0
 
-	// x      x*n                          (xn)/z
+	// x      x*n                          (xn)/-z
 	// y  =>  y*n  =after vertex shader=>  (yn)/z
-	// z       z                            z/z ==> PROBLEM HERE : LOST DEPTH INFORMATION
+	// z       z                            z/-z ==> PROBLEM HERE : LOST DEPTH INFORMATION
 	// 1       z                             
 
 
-	// x      x*n                          (xn)/z
-	// y  =>  y*n  =after vertex shader=>  (yn)/z
-	// z       z²                           z²/z ==> z
+	// x      x*n                          (xn)/-z
+	// y  =>  y*n  =after vertex shader=>  (yn)/-z
+	// z       z²                           -z²/-z ==> z
 	// 1       z                             
 
 	//    n   0   0    0
@@ -260,11 +260,4 @@ void Camera::setPerspectiveProjection(float fov, float aspectRatio, float near, 
 	//                  0               1/(tan(theta)         0              0
 	//                  0                     0         (-n-f)/(n-f)      2fn/(n-f)
 	//                  0                     0               0              1
-
-
-
-}
-
-void Camera::update(GLFWwindow* window, float deltaSeconds)
-{
 }

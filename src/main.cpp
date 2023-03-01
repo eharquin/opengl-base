@@ -1,7 +1,7 @@
 #include "openglbase.h"
 #include "stb_image.h"
 #include "shader.h"
-#include "camera.h"
+#include "flyingCamera.h"
 
 const int WIDTH = 800;
 const int HEIGHT = 600;
@@ -9,9 +9,16 @@ const int HEIGHT = 600;
 const unsigned short OPENGL_MAJOR_VERSION = 4;
 const unsigned short OPENGL_MINOR_VERSION = 6;
 
+float lastX = 400, lastY = 300;
 
-glm::vec3 cameraPosition(0.0f);
-glm::vec3 cameraDirection(0.0f);
+bool firstMouse = true;
+
+void mouse_callback(GLFWwindow* window, double xpos, double ypos);
+void scroll_callback(GLFWwindow* window, double xoffset, double yoffset);
+
+FlyingCamera camera(glm::vec3(0.0f, 0.0f, -7.0f));
+
+float fov = 45.0f;
 
 int main()
 {
@@ -42,12 +49,19 @@ int main()
 	if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress))
 		throw std::runtime_error("Failed to use glad loader");
 
+	glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+
 	// define callback to window resizing
 	glfwSetFramebufferSizeCallback(window, [](GLFWwindow* window, int width, int height)
 	{
 		// specify the viewport : "size of the screen"
 		glViewport(0, 0, width, height);
 	});
+
+	glfwSetCursorPosCallback(window, mouse_callback);
+
+	glfwSetScrollCallback(window, scroll_callback);
+
 	// ---------------------------------------------------------------------------------
 	// ---------------------------------------------------------------------------------
 
@@ -186,7 +200,7 @@ int main()
 
 	glBindVertexArray(VAO);
 
-	glm::vec3 cubePositions[] = {
+	std::vector<glm::vec3> cubePositions = {
 		glm::vec3(0.0f,  0.0f,  0.0f),
 		glm::vec3(2.0f,  5.0f, -15.0f),
 		glm::vec3(-1.5f, -2.2f, -2.5f),
@@ -199,22 +213,27 @@ int main()
 		glm::vec3(-1.3f,  1.0f, -1.5f)
 	};
 
-	cameraDirection = glm::vec3 (0.0f, 0.0f, -1.0f);
+	std::vector<glm::vec3> cubeRotations = {
+		glm::vec3(0.1f,  0.0f,  0.0f),
+		glm::vec3(1.0f,  0.5f, 1.0f),
+		glm::vec3(-0.5f, 0.2f, 0.5f),
+		glm::vec3(-0.8f, -0.0f, -0.3f),
+		glm::vec3(0.4f, -0.4f, -0.5f),
+		glm::vec3(-0.7f,  1.0f, -0.5f),
+		glm::vec3(0.3f, -1.0f, -0.5f),
+		glm::vec3(0.5f,  1.0f, -0.5f),
+		glm::vec3(0.5f,  0.2f, -0.5f),
+		glm::vec3(-0.3f,  1.0f, -0.5f)
+	};
 
-	Camera camera;
-	camera.setViewTarget(glm::vec3(0.0f, 0.0f, -3.0f), glm::vec3(0.0f, 0.0f, 0.0f));
 
-	// time between current frame and laqt frame
-	float deltaTime = 0.0f;
+	// time between current frame and last frame
+	float deltaSeconds = 0.0f;
 	// time of last frame
-	float lastFrame = 0.0f;
-
-
-
-	float angle = 0.05f;
-	float theta = 0.0f;
+	float lastFrameSeconds = 0.0f;
 	
-	float radius = 10.0f;
+	float angle = 0.005f;
+	float theta = 0.0f;
 	// -----------------------------------------------------------------------------------
 	// render loop
 	while (!glfwWindowShouldClose(window))
@@ -222,39 +241,28 @@ int main()
 		// per-frame time logic
 		// --------------------
 		float currentFrame = glfwGetTime();
-		deltaTime = currentFrame - lastFrame;
-		lastFrame = currentFrame;
+		deltaSeconds = currentFrame - lastFrameSeconds;
+		lastFrameSeconds = currentFrame;
 
 		// clear the screen with the clear color
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-		cameraPosition.x = sin(theta) * radius;
-		cameraPosition.z = cos(theta) * radius;
 
-		camera.setViewTarget(cameraPosition, glm::vec3(0.0f, 0.0f, 0.0f));
-
-		for (unsigned int i = 0; i < 10; i++)
+		for (unsigned int i = 0; i < cubePositions.size(); i++)
 		{
 			glm::mat4 model(1.0f);
 			model = glm::translate(model, cubePositions[i]);
-			model = glm::rotate(model, theta, glm::vec3(1.0f, .3f, .5f));
-			theta += angle * deltaTime;
+			model = glm::rotate(model, theta, cubeRotations[i]);
+			theta += angle * deltaSeconds;
 
-			glm::mat4 view(1.0f);
-			view = camera.view();
+			camera.processKeyboardEvent(window, deltaSeconds);
+			glm::mat4 view = camera.view();
 
-			glm::mat4 projection(1.0f);
-			//projection = glm::ortho(-5.0f, 5.0f, -5.0f, 5.0f, 0.1f, 100.0f);
-			//camera.setOrthographicProjection(-5.0f, 5.0f, -5.0f, 5.0f, 0.1f, 100.0f);
-			projection = glm::perspective(glm::radians(45.0f), float(WIDTH) / HEIGHT, 0.1f, 100.0f);
-			camera.setPerspectiveProjection(glm::radians(45.0f), (float)WIDTH / HEIGHT, 0.1f, 100.0f);
-			projection = camera.projection();
-
+			glm::mat4 projection = glm::perspective(glm::radians(fov), float(WIDTH) / HEIGHT, 0.1f, 100.0f);
 
 			glm::mat4 mvp = projection * view * model;
 
 			shader.uniformMatrix4("MVP", mvp);
-
 
 			glDrawElements(GL_TRIANGLES, indices.size(), GL_UNSIGNED_INT, GL_NONE);
 		}
@@ -278,4 +286,37 @@ int main()
 	glfwTerminate();
 
 	return 0;
+}
+
+void mouse_callback(GLFWwindow* window, double xposIn, double yposIn)
+{
+	float xpos = static_cast<float>(xposIn);
+	float ypos = static_cast<float>(yposIn);
+
+	if (firstMouse)
+	{
+		lastX = xpos;
+		lastY = ypos;
+		firstMouse = false;
+	}
+
+	float xoffset = xpos - lastX;
+	float yoffset = ypos - lastY; // reversed since y-coordinates go from bottom to top
+	lastX = xpos;
+	lastY = ypos;
+
+	float sensitivity = 0.1f; // change this value to your liking
+	xoffset *= sensitivity;
+	yoffset *= sensitivity;
+
+	camera.processMouseEvent(xoffset, yoffset);
+}
+
+void scroll_callback(GLFWwindow* window, double xoffset, double yoffset)
+{
+	fov -= (float)yoffset;
+	if (fov < 1.0f)
+		fov = 1.0f;
+	if (fov > 45.0f)
+		fov = 45.0f;
 }
