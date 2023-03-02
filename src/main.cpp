@@ -3,22 +3,9 @@
 #include "shader.h"
 #include "flyingCamera.h"
 
-const int WIDTH = 800;
-const int HEIGHT = 600;
+void processInput(GLFWwindow* window, float deltaSeconds);
 
-const unsigned short OPENGL_MAJOR_VERSION = 4;
-const unsigned short OPENGL_MINOR_VERSION = 6;
-
-float lastX = 400, lastY = 300;
-
-bool firstMouse = true;
-
-void mouse_callback(GLFWwindow* window, double xpos, double ypos);
-void scroll_callback(GLFWwindow* window, double xoffset, double yoffset);
-
-FlyingCamera camera(glm::vec3(0.0f, 0.0f, -7.0f));
-
-float fov = 45.0f;
+FlyingCamera camera;
 
 int main()
 {
@@ -31,7 +18,7 @@ int main()
 	glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, OPENGL_MAJOR_VERSION);
 	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, OPENGL_MINOR_VERSION);
 	glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
-	//glfwWindowHint(GLFW_RESIZABLE, GLFW_FALSE);
+	glfwWindowHint(GLFW_RESIZABLE, GLFW_FALSE);
 
 	// create window (define the viewport by default)
 	GLFWwindow* window = glfwCreateWindow(WIDTH, HEIGHT, "OPENGLBASE", NULL, NULL);
@@ -51,17 +38,23 @@ int main()
 
 	glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
 
-	// define callback to window resizing
+	// define window callback
 	glfwSetFramebufferSizeCallback(window, [](GLFWwindow* window, int width, int height)
 	{
 		// specify the viewport : "size of the screen"
 		glViewport(0, 0, width, height);
 	});
+	glfwSetCursorPosCallback(window, [](GLFWwindow* window, double xposIn, double yposIn)
+	{
+		float xpos = static_cast<float>(xposIn);
+		float ypos = static_cast<float>(yposIn);
 
-	glfwSetCursorPosCallback(window, mouse_callback);
-
-	glfwSetScrollCallback(window, scroll_callback);
-
+		camera.processMouseEvent(xpos, ypos);
+	});
+	glfwSetScrollCallback(window, [](GLFWwindow* window, double xoffset, double yoffset)
+	{
+		camera.processScrollEvent(yoffset);
+	});
 	// ---------------------------------------------------------------------------------
 	// ---------------------------------------------------------------------------------
 
@@ -72,6 +65,9 @@ int main()
 	// ---------------------------------------------------------------------------------
 	// ---------------------------------------------------------------------------------
 
+
+	// ---------------------------------------------------------------------------------
+	// 3d model of a 1x1x1 cube 
 	std::vector<float> vertices = {
 		-0.5f, -0.5f, -0.5f,  0.0f, 0.0f,
 		 0.5f, -0.5f, -0.5f,  1.0f, 0.0f,
@@ -118,6 +114,9 @@ int main()
 		20, 21, 22,
 		20, 22, 23
 	};
+	// ---------------------------------------------------------------------------------
+	// ---------------------------------------------------------------------------------
+
 
 	// -----------------------------------------------------------------------------------
 	// create vertex buffer object and vertex arrays
@@ -171,9 +170,7 @@ int main()
 	int widthTexture, heightTexture, numColCh;
 	unsigned char* data = stbi_load("texture/magical.png", &widthTexture, &heightTexture, &numColCh, 0);
 	if (!data)
-	{
 		throw std::runtime_error("Failed to load texture");
-	}
 
 	// submit image information to the texture
 	glTextureStorage2D(texture, 1, GL_RGBA8, widthTexture, heightTexture);
@@ -187,19 +184,8 @@ int main()
 	// -----------------------------------------------------------------------------------
 
 
-	// define the clear color (clear blue)
-	glClearColor(.6f, .6f, .8f, 1.f);
-	glEnable(GL_DEPTH_TEST);
-
-
-	shader.use();
-
-	// bind texture and add a int uniform with the texture unit
-	glBindTextureUnit(0, texture);
-	shader.uniform1i("texture0", 0);
-
-	glBindVertexArray(VAO);
-
+	// ---------------------------------------------------------------------------------
+	// cubes psitions and rotations
 	std::vector<glm::vec3> cubePositions = {
 		glm::vec3(0.0f,  0.0f,  0.0f),
 		glm::vec3(2.0f,  5.0f, -15.0f),
@@ -225,6 +211,14 @@ int main()
 		glm::vec3(0.5f,  0.2f, -0.5f),
 		glm::vec3(-0.3f,  1.0f, -0.5f)
 	};
+	// -----------------------------------------------------------------------------------
+	// -----------------------------------------------------------------------------------
+
+
+	// define the clear color (clear blue)
+	glClearColor(.6f, .6f, .8f, 1.f);
+	// enable depth comparaison (3D)
+	glEnable(GL_DEPTH_TEST);
 
 
 	// time between current frame and last frame
@@ -232,21 +226,36 @@ int main()
 	// time of last frame
 	float lastFrameSeconds = 0.0f;
 	
+	// rotation animation values
 	float angle = 0.005f;
 	float theta = 0.0f;
+
 	// -----------------------------------------------------------------------------------
 	// render loop
 	while (!glfwWindowShouldClose(window))
 	{
 		// per-frame time logic
-		// --------------------
 		float currentFrame = glfwGetTime();
 		deltaSeconds = currentFrame - lastFrameSeconds;
 		lastFrameSeconds = currentFrame;
 
+		processInput(window, deltaSeconds);
+
 		// clear the screen with the clear color
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
+		// bind the principal vertex array
+		glBindVertexArray(VAO);
+
+		// use the principal shader program
+		shader.use();
+
+		// bind texture and add a int uniform with the texture unit
+		glBindTextureUnit(0, texture);
+		shader.uniform1i("texture0", 0);
+
+		glm::mat4 view = camera.view();
+		glm::mat4 projection = camera.projection();
 
 		for (unsigned int i = 0; i < cubePositions.size(); i++)
 		{
@@ -254,11 +263,6 @@ int main()
 			model = glm::translate(model, cubePositions[i]);
 			model = glm::rotate(model, theta, cubeRotations[i]);
 			theta += angle * deltaSeconds;
-
-			camera.processKeyboardEvent(window, deltaSeconds);
-			glm::mat4 view = camera.view();
-
-			glm::mat4 projection = glm::perspective(glm::radians(fov), float(WIDTH) / HEIGHT, 0.1f, 100.0f);
 
 			glm::mat4 mvp = projection * view * model;
 
@@ -288,35 +292,10 @@ int main()
 	return 0;
 }
 
-void mouse_callback(GLFWwindow* window, double xposIn, double yposIn)
+void processInput(GLFWwindow* window, float deltaSeconds)
 {
-	float xpos = static_cast<float>(xposIn);
-	float ypos = static_cast<float>(yposIn);
+	if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
+		glfwSetWindowShouldClose(window, true);
 
-	if (firstMouse)
-	{
-		lastX = xpos;
-		lastY = ypos;
-		firstMouse = false;
-	}
-
-	float xoffset = xpos - lastX;
-	float yoffset = ypos - lastY; // reversed since y-coordinates go from bottom to top
-	lastX = xpos;
-	lastY = ypos;
-
-	float sensitivity = 0.1f; // change this value to your liking
-	xoffset *= sensitivity;
-	yoffset *= sensitivity;
-
-	camera.processMouseEvent(xoffset, yoffset);
-}
-
-void scroll_callback(GLFWwindow* window, double xoffset, double yoffset)
-{
-	fov -= (float)yoffset;
-	if (fov < 1.0f)
-		fov = 1.0f;
-	if (fov > 45.0f)
-		fov = 45.0f;
+	camera.processKeyboardEvent(window, deltaSeconds);
 }

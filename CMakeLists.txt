@@ -45,8 +45,6 @@ set(SRC ${SOURCE_DIR}/main.cpp
         ${SOURCE_DIR}/stb.cpp 
         ${SOURCE_DIR}/shader.h
         ${SOURCE_DIR}/shader.cpp
-        ${SOURCE_DIR}/camera.h
-        ${SOURCE_DIR}/camera.cpp
         ${SOURCE_DIR}/flyingCamera.h
         ${SOURCE_DIR}/flyingCamera.cpp)
 
