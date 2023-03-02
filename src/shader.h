@@ -27,5 +27,6 @@ public:
 	void use();
 
 	void uniform1i(const std::string& name, int value);
-	void uniformMatrix4(const std::string& name, glm::mat4 value);
+	void uniformMat4(const std::string& name, glm::mat4 value);
+	void uniformVec3(const std::string& name, glm::vec3 value);
 };

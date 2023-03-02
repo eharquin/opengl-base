@@ -83,7 +83,12 @@ void Shader::uniform1i(const std::string& name, int value)
 	glUniform1i(glGetUniformLocation(id_, name.c_str()), value);
 }
 
-void Shader::uniformMatrix4(const std::string& name, glm::mat4 value)
+void Shader::uniformVec3(const std::string& name, glm::vec3 value)
+{
+	glUniform3fv(glGetUniformLocation(id_, name.c_str()), 1, &value[0]);
+}
+
+void Shader::uniformMat4(const std::string& name, glm::mat4 value)
 {
 	glUniformMatrix4fv(glGetUniformLocation(id_, name.c_str()), 1, GL_FALSE, &value[0][0]);
 }

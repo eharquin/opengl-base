@@ -26,7 +26,7 @@ public:
 	float fov = 45.0f;
 	const float aspectRatio = (float)WIDTH / HEIGHT;
 	float near = 0.1f;
-	float far = 20.0f;
+	float far = 100.0f;
 
 	int lastState = GLFW_RELEASE;
 
