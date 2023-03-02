@@ -122,12 +122,12 @@ glm::mat4 FlyingCamera::createPerspective()
 
 glm::mat4 FlyingCamera::createOrthographic()
 {
-	float ratio_size_per_depth = atan(glm::radians(fov / 2.0f)) * 2.0f;
+	float ratioSizePerDepth = atan(glm::radians(fov / 2.0f)) * 2.0f;
 
 	auto distance = glm::length(glm::vec3(0.0f, 0.0f, 0.0f) - position);
 
-	float right = ratio_size_per_depth * distance * aspectRatio;
-	float top = ratio_size_per_depth * distance;
+	float right = ratioSizePerDepth * distance * aspectRatio;
+	float top = ratioSizePerDepth * distance;
 
 	float n = 0.0f;
 	float f = 2.0f * distance;

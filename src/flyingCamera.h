@@ -49,6 +49,7 @@ private:
 
 	glm::mat4 createPerspective();
 	glm::mat4 createOrthographic();
+
 	void updateBaseVectors();
 
 };
