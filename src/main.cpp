@@ -222,7 +222,7 @@ int main()
 
 
 	// define the clear color (clear blue)
-	glClearColor(.6f, .6f, .8f, 1.f);
+	glClearColor(.05f, 0.05f, .3f, 1.f);
 	// enable depth comparaison (3D)
 	glEnable(GL_DEPTH_TEST);
 
