@@ -238,6 +238,9 @@ int main()
 	ImGui_ImplOpenGL3_Init("#version 460");
 
 
+	glm::vec3 lightColor(1.0f);
+
+
 	// time between current frame and last frame
 	float deltaSeconds = 0.0f;
 	// time of last frame
@@ -286,9 +289,19 @@ int main()
 			globalShader.uniformMat4("view", view);
 			globalShader.uniformMat4("projection", projection);
 
-			globalShader.uniformVec3("objectColor", cubeColors[i]);
-			globalShader.uniformVec3("lightColor", glm::vec3(1.0f, 1.0f, 1.0f));
-			globalShader.uniformVec3("lightPos", lightPosition);
+			globalShader.uniformVec3("material.ambient", glm::vec3(1.0f, 0.5f, 0.31f));
+			globalShader.uniformVec3("material.diffuse", glm::vec3(1.0f, 0.5f, 0.31f));
+			globalShader.uniformVec3("material.specular", glm::vec3(0.5f, 0.5f, 0.5f));
+			globalShader.uniform1f("material.shininess", 32.0f);
+
+			glm::vec3 diffuseColor = lightColor * glm::vec3(0.5f);
+			glm::vec3 ambientColor = diffuseColor * glm::vec3(0.2f);
+
+			globalShader.uniformVec3("light.ambient", ambientColor);
+			globalShader.uniformVec3("light.diffuse", diffuseColor); // darken diffuse light a bit
+			globalShader.uniformVec3("light.specular", glm::vec3(1.0f, 1.0f, 1.0f));
+			globalShader.uniformVec3("light.position", lightPosition);
+
 			globalShader.uniformVec3("viewPos", camera.position);
 
 
@@ -303,9 +316,11 @@ int main()
 
 		glm::mat4 mvp = projection * view * model;
 
-		globalShader.uniformMat4("model", model);
-		globalShader.uniformMat4("view", view);
-		globalShader.uniformMat4("projection", projection);
+		pointLightShader.uniformMat4("model", model);
+		pointLightShader.uniformMat4("view", view);
+		pointLightShader.uniformMat4("projection", projection);
+
+		pointLightShader.uniformVec3("lightColor", lightColor);
 
 		glDrawElements(GL_TRIANGLES, indices.size(), GL_UNSIGNED_INT, GL_NONE);
 
@@ -314,7 +329,7 @@ int main()
 		ImGui::Begin("imgui");
 		ImGui::Text("test");
 		ImGui::Checkbox("isPerpective", &camera.isPerspective);
-		ImGui::SliderFloat3("lightPosition", &lightPosition[0], -10.0f, 10.0f);
+		ImGui::ColorPicker3("light color", &lightColor[0]);
 		ImGui::End();
 
 		ImGui::Render();
