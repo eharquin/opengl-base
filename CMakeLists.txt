@@ -47,6 +47,8 @@ set(SRC ${SOURCE_DIR}/main.cpp
         ${SOURCE_DIR}/shader.cpp
         ${SOURCE_DIR}/flyingCamera.h
         ${SOURCE_DIR}/flyingCamera.cpp
+        ${SOURCE_DIR}/texture.h
+        ${SOURCE_DIR}/texture.cpp
 
         ${SOURCE_DIR}/imgui/imconfig.h
         ${SOURCE_DIR}/imgui/imgui_demo.cpp
