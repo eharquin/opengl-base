@@ -1,7 +1,7 @@
 #include "openglbase.h"
-#include "stb_image.h"
 #include "shader.h"
 #include "flyingCamera.h"
+#include "texture.h"
 
 void processInput(GLFWwindow* window, float deltaSeconds);
 
@@ -88,39 +88,48 @@ int main()
 	// ---------------------------------------------------------------------------------
 	// ---------------------------------------------------------------------------------
 
+	// -----------------------------------------------------------------------------------
+	// create texture
+	Texture containerTexture("texture/container.png");
+	Texture containerSpecularTexture("texture/container_specular.png");
+	Texture emissionTexture("texture/container_emission.png");
+	// -----------------------------------------------------------------------------------
+	// -----------------------------------------------------------------------------------
+
 
 	// ---------------------------------------------------------------------------------
 	// 3d model of a 1x1x1 cube 
 	std::vector<float> vertices = {
-		-0.5f, -0.5f, -0.5f, 0.0f,  0.0f, -1.0f,
-		 0.5f, -0.5f, -0.5f, 0.0f,  0.0f, -1.0f,
-		 0.5f,  0.5f, -0.5f, 0.0f,  0.0f, -1.0f,
-		-0.5f,  0.5f, -0.5f, 0.0f,  0.0f, -1.0f,
+		// positions         // normals          // texture coords
+		-0.5f, -0.5f, -0.5f, 0.0f,  0.0f, -1.0f, 0.0f, 0.0f,
+		 0.5f, -0.5f, -0.5f, 0.0f,  0.0f, -1.0f, 1.0f, 0.0f,
+		 0.5f,  0.5f, -0.5f, 0.0f,  0.0f, -1.0f, 1.0f, 1.0f,
+		-0.5f,  0.5f, -0.5f, 0.0f,  0.0f, -1.0f, 0.0f, 1.0f,
 
-		-0.5f, -0.5f,  0.5f, 0.0f,  0.0f, 1.0f,
-		 0.5f, -0.5f,  0.5f, 0.0f,  0.0f, 1.0f,
-		 0.5f,  0.5f,  0.5f, 0.0f,  0.0f, 1.0f,
-		-0.5f,  0.5f,  0.5f, 0.0f,  0.0f, 1.0f,
+		-0.5f, -0.5f,  0.5f, 0.0f,  0.0f, 1.0f, 0.0f, 0.0f,
+		 0.5f, -0.5f,  0.5f, 0.0f,  0.0f, 1.0f, 1.0f, 0.0f,
+		 0.5f,  0.5f,  0.5f, 0.0f,  0.0f, 1.0f, 1.0f, 1.0f,
+		-0.5f,  0.5f,  0.5f, 0.0f,  0.0f, 1.0f, 0.0f, 1.0f,
 		
-		-0.5f,  0.5f,  0.5f, -1.0f,  0.0f,  0.0f,
-		-0.5f,  0.5f, -0.5f, -1.0f,  0.0f,  0.0f,
-		-0.5f, -0.5f, -0.5f, -1.0f,  0.0f,  0.0f,
-		-0.5f, -0.5f,  0.5f, -1.0f,  0.0f,  0.0f,
+		-0.5f,  0.5f,  0.5f, -1.0f,  0.0f,  0.0f, 0.0f, 0.0f,
+		-0.5f,  0.5f, -0.5f, -1.0f,  0.0f,  0.0f, 1.0f, 0.0f,
+		-0.5f, -0.5f, -0.5f, -1.0f,  0.0f,  0.0f, 1.0f, 1.0f,
+		-0.5f, -0.5f,  0.5f, -1.0f,  0.0f,  0.0f, 0.0f, 1.0f,
 
-		 0.5f,  0.5f,  0.5f, 1.0f,  0.0f,  0.0f,
-		 0.5f,  0.5f, -0.5f, 1.0f,  0.0f,  0.0f,
-		 0.5f, -0.5f, -0.5f, 1.0f,  0.0f,  0.0f,
-		 0.5f, -0.5f,  0.5f, 1.0f,  0.0f,  0.0f,
+		 0.5f,  0.5f,  0.5f, 1.0f,  0.0f,  0.0f, 0.0f, 0.0f,
+		 0.5f,  0.5f, -0.5f, 1.0f,  0.0f,  0.0f, 1.0f, 0.0f,
+		 0.5f, -0.5f, -0.5f, 1.0f,  0.0f,  0.0f, 1.0f, 1.0f,
+		 0.5f, -0.5f,  0.5f, 1.0f,  0.0f,  0.0f, 0.0f, 1.0f,
 
-		-0.5f, -0.5f, -0.5f, 0.0f, -1.0f,  0.0f,
-		 0.5f, -0.5f, -0.5f, 0.0f, -1.0f,  0.0f,
-		 0.5f, -0.5f,  0.5f, 0.0f, -1.0f,  0.0f,
-		-0.5f, -0.5f,  0.5f, 0.0f, -1.0f,  0.0f,
+		-0.5f, -0.5f, -0.5f, 0.0f, -1.0f,  0.0f, 0.0f, 0.0f,
+		 0.5f, -0.5f, -0.5f, 0.0f, -1.0f,  0.0f, 1.0f, 0.0f,
+		 0.5f, -0.5f,  0.5f, 0.0f, -1.0f,  0.0f, 1.0f, 1.0f,
+		-0.5f, -0.5f,  0.5f, 0.0f, -1.0f,  0.0f, 0.0f, 1.0f,
 
-		-0.5f,  0.5f, -0.5f, 0.0f,  1.0f,  0.0f,
-		 0.5f,  0.5f, -0.5f, 0.0f,  1.0f,  0.0f,
-		 0.5f,  0.5f,  0.5f, 0.0f,  1.0f,  0.0f,
-		-0.5f,  0.5f,  0.5f, 0.0f,  1.0f,  0.0f
+		-0.5f,  0.5f, -0.5f, 0.0f,  1.0f,  0.0f, 0.0f, 0.0f,
+		 0.5f,  0.5f, -0.5f, 0.0f,  1.0f,  0.0f, 1.0f, 0.0f,
+		 0.5f,  0.5f,  0.5f, 0.0f,  1.0f,  0.0f, 1.0f, 1.0f,
+		-0.5f,  0.5f,  0.5f, 0.0f,  1.0f,  0.0f, 0.0f, 1.0f
 	};
 
 	std::vector<GLuint> indices = {
@@ -159,17 +168,20 @@ int main()
 	glCreateVertexArrays(1, &VAO);
 
 	// bind the VBO to the VAO
-	glVertexArrayVertexBuffer(VAO, 0, VBO, 0, 6 * sizeof(float));
+	glVertexArrayVertexBuffer(VAO, 0, VBO, 0, 8 * sizeof(float));
 
 	// enable atribute and define vertex formats
 	glEnableVertexArrayAttrib(VAO, 0);
 	glVertexArrayAttribFormat(VAO, 0, 3, GL_FLOAT, false, 0);
 	glEnableVertexArrayAttrib(VAO, 1);
 	glVertexArrayAttribFormat(VAO, 1, 3, GL_FLOAT, false, 3 * sizeof(float));
+	glEnableVertexArrayAttrib(VAO, 2);
+	glVertexArrayAttribFormat(VAO, 2, 2, GL_FLOAT, false, 6 * sizeof(float));
 
 	// associate vertex attributes and vertex buffer binding for a VAO
 	glVertexArrayAttribBinding(VAO, 0, 0);
 	glVertexArrayAttribBinding(VAO, 1, 0);
+	glVertexArrayAttribBinding(VAO, 2, 0);
 
 	// bind the EBO to the VAO
 	glVertexArrayElementBuffer(VAO, EBO);
@@ -274,6 +286,16 @@ int main()
 		// use the principal shader program
 		globalShader.use();
 
+		// bind texture and add a int uniform with the texture unit
+		containerTexture.bind(0);
+		containerSpecularTexture.bind(1);
+		emissionTexture.bind(2);
+
+		globalShader.uniform1i("material.diffuse", 0);
+		globalShader.uniform1i("material.specular", 1);
+		globalShader.uniform1i("material.emission", 2);
+
+		globalShader.uniform1f("material.shininess", 32.0f);
 
 		glm::mat4 view = camera.view();
 		glm::mat4 projection = camera.projection();
@@ -289,10 +311,6 @@ int main()
 			globalShader.uniformMat4("view", view);
 			globalShader.uniformMat4("projection", projection);
 
-			globalShader.uniformVec3("material.ambient", glm::vec3(1.0f, 0.5f, 0.31f));
-			globalShader.uniformVec3("material.diffuse", glm::vec3(1.0f, 0.5f, 0.31f));
-			globalShader.uniformVec3("material.specular", glm::vec3(0.5f, 0.5f, 0.5f));
-			globalShader.uniform1f("material.shininess", 32.0f);
 
 			glm::vec3 diffuseColor = lightColor * glm::vec3(0.5f);
 			glm::vec3 ambientColor = diffuseColor * glm::vec3(0.2f);
@@ -349,7 +367,6 @@ int main()
 	ImGui_ImplOpenGL3_Shutdown();
 	ImGui_ImplGlfw_Shutdown();
 	ImGui::DestroyContext();
-
 
 
 	glDeleteVertexArrays(1, &VAO);
