@@ -23,7 +23,7 @@ public:
 	// projection variable
 	bool isPerspective = true;
 
-	float fov = 45.0f;
+	float fov = 90.0f;
 	const float aspectRatio = (float)WIDTH / HEIGHT;
 	float near = 0.1f;
 	float far = 100.0f;
