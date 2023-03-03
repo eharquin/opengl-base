@@ -1,4 +1,9 @@
 #pragma once
+
+#include "imgui.h"
+#include "imgui_impl_opengl3.h"
+#include "imgui_impl_glfw.h"
+
 #include "glad/glad.h"
 #include "GLFW/glfw3.h"
 #include "glm/glm.hpp"
@@ -8,8 +13,8 @@
 #include <iostream>
 #include <vector>
 
-const int WIDTH = 800;
-const int HEIGHT = 600;
+static int WIDTH = 800;
+static int HEIGHT = 600;
 
 const unsigned short OPENGL_MAJOR_VERSION = 4;
 const unsigned short OPENGL_MINOR_VERSION = 6;

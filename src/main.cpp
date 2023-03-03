@@ -7,6 +7,20 @@ void processInput(GLFWwindow* window, float deltaSeconds);
 
 FlyingCamera camera;
 
+bool focus = true;
+int lastStateKeyF = GLFW_RELEASE;
+
+int lastStateKeyF11 = GLFW_RELEASE;
+bool fullScreen = true;
+
+glm::vec3 lightPosition(1.2f, 1.0f, 2.0f);
+float lightMoveSpeed = 2.0f;
+
+glm::vec3 worldRight(1.0f, 0.0f, 0.0f);
+glm::vec3 worldUp(0.0f, 1.0f, 0.0f);
+glm::vec3 worldFront(0.0f, 0.0f, -1.0f);
+
+
 int main()
 {
 	// ---------------------------------------------------------------------------------
@@ -21,12 +35,18 @@ int main()
 	glfwWindowHint(GLFW_RESIZABLE, GLFW_FALSE);
 
 	// create window (define the viewport by default)
-	GLFWwindow* window = glfwCreateWindow(WIDTH, HEIGHT, "OPENGLBASE", NULL, NULL);
+	int count = 0;
+	GLFWmonitor** monitor = glfwGetMonitors(&count); 
+	const GLFWvidmode* mode = glfwGetVideoMode(monitor[0]);
+	GLFWwindow* window = glfwCreateWindow(mode->width, mode->height, "OPENGLBASE", monitor[0], NULL);
 	if (window == NULL)
 	{
 		glfwTerminate();
 		throw std::runtime_error("Failed to create the GLFW window");
 	}
+
+	WIDTH = mode->width;
+	HEIGHT = mode->height;
 
 	// introduce the window into the current context
 	glfwMakeContextCurrent(window);
@@ -49,11 +69,13 @@ int main()
 		float xpos = static_cast<float>(xposIn);
 		float ypos = static_cast<float>(yposIn);
 
-		camera.processMouseEvent(xpos, ypos);
+		if(focus)
+			camera.processMouseEvent(xpos, ypos);
 	});
 	glfwSetScrollCallback(window, [](GLFWwindow* window, double xoffset, double yoffset)
 	{
-		camera.processScrollEvent(yoffset);
+		if(focus)
+			camera.processScrollEvent(yoffset);
 	});
 	// ---------------------------------------------------------------------------------
 	// ---------------------------------------------------------------------------------
@@ -184,7 +206,7 @@ int main()
 	};
 
 	std::vector<glm::vec3> cubeColors = {
-		glm::vec3(1.0f, 0.5f, 1.0f),
+		glm::vec3(.1f, 0.5f, .1f),
 		glm::vec3(0.5f, 0.2f, 0.5f),
 		glm::vec3(0.8f, 0.0f, 0.3f),
 		glm::vec3(0.4f, 0.4f, 0.5f),
@@ -199,14 +221,21 @@ int main()
 	// -----------------------------------------------------------------------------------
 
 
-	glm::vec3 lightPosition(1.2f, 1.0f, 2.0f);
-
-
-
 	// define the clear color (clear blue)
 	glClearColor(.6f, .6f, .8f, 1.f);
 	// enable depth comparaison (3D)
 	glEnable(GL_DEPTH_TEST);
+
+
+
+	// init IMGUI
+	IMGUI_CHECKVERSION();
+	ImGui::CreateContext();
+	ImGuiIO& io = ImGui::GetIO(); 
+	(void)io;
+	ImGui::StyleColorsDark();
+	ImGui_ImplGlfw_InitForOpenGL(window, true);
+	ImGui_ImplOpenGL3_Init("#version 460");
 
 
 	// time between current frame and last frame
@@ -215,7 +244,7 @@ int main()
 	float lastFrameSeconds = 0.0f;
 	
 	// rotation animation values
-	float angle = 0.005f;
+	float angle = 0.05f;
 	float theta = 0.0f;
 
 	// -----------------------------------------------------------------------------------
@@ -231,6 +260,10 @@ int main()
 
 		// clear the screen with the clear color
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+		ImGui_ImplOpenGL3_NewFrame();
+		ImGui_ImplGlfw_NewFrame();
+		ImGui::NewFrame();
 
 		// bind the principal vertex array
 		glBindVertexArray(VAO);
@@ -277,6 +310,17 @@ int main()
 		glDrawElements(GL_TRIANGLES, indices.size(), GL_UNSIGNED_INT, GL_NONE);
 
 
+
+		ImGui::Begin("imgui");
+		ImGui::Text("test");
+		ImGui::Checkbox("isPerpective", &camera.isPerspective);
+		ImGui::SliderFloat3("lightPosition", &lightPosition[0], -10.0f, 10.0f);
+		ImGui::End();
+
+		ImGui::Render();
+		ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
+
+
 		// compute events of the window
 		glfwPollEvents();
 
@@ -285,6 +329,13 @@ int main()
 	}
 	// -----------------------------------------------------------------------------------
 	// -----------------------------------------------------------------------------------
+
+
+	ImGui_ImplOpenGL3_Shutdown();
+	ImGui_ImplGlfw_Shutdown();
+	ImGui::DestroyContext();
+
+
 
 	glDeleteVertexArrays(1, &VAO);
 	glDeleteBuffers(1, &EBO);
@@ -301,5 +352,44 @@ void processInput(GLFWwindow* window, float deltaSeconds)
 	if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
 		glfwSetWindowShouldClose(window, true);
 
-	camera.processKeyboardEvent(window, deltaSeconds);
+	int stateKeyF = glfwGetKey(window, GLFW_KEY_F);
+
+	if (stateKeyF == GLFW_PRESS && lastStateKeyF == GLFW_RELEASE)
+	{
+		if(focus)
+			glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
+		else
+			glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+
+		focus = !focus;
+	}
+
+	int stateKeyF11 = glfwGetKey(window, GLFW_KEY_F11);
+
+	if (stateKeyF11 == GLFW_PRESS && lastStateKeyF11 == GLFW_RELEASE)
+	{
+
+	}
+
+	lastStateKeyF = stateKeyF;
+
+	if(focus)
+		camera.processKeyboardEvent(window, deltaSeconds);
+	else
+	{
+		if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
+			lightPosition += worldFront * lightMoveSpeed * deltaSeconds;
+		if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)
+			lightPosition -= worldFront * lightMoveSpeed * deltaSeconds;
+
+		if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
+			lightPosition += worldRight * lightMoveSpeed * deltaSeconds;
+		if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS)
+			lightPosition -= worldRight * lightMoveSpeed * deltaSeconds;
+
+		if (glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_PRESS)
+			lightPosition += worldUp * lightMoveSpeed * deltaSeconds;
+		if (glfwGetKey(window, GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS)
+			lightPosition -= worldUp * lightMoveSpeed * deltaSeconds;
+	}
 }

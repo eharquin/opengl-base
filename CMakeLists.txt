@@ -46,9 +46,28 @@ set(SRC ${SOURCE_DIR}/main.cpp
         ${SOURCE_DIR}/shader.h
         ${SOURCE_DIR}/shader.cpp
         ${SOURCE_DIR}/flyingCamera.h
-        ${SOURCE_DIR}/flyingCamera.cpp)
+        ${SOURCE_DIR}/flyingCamera.cpp
+
+        ${SOURCE_DIR}/imgui/imconfig.h
+        ${SOURCE_DIR}/imgui/imgui_demo.cpp
+        ${SOURCE_DIR}/imgui/imgui_draw.cpp
+        ${SOURCE_DIR}/imgui/imgui_impl_glfw.cpp
+        ${SOURCE_DIR}/imgui/imgui_impl_glfw.h
+        ${SOURCE_DIR}/imgui/imgui_impl_opengl3.cpp
+        ${SOURCE_DIR}/imgui/imgui_impl_opengl3.h
+        ${SOURCE_DIR}/imgui/imgui_impl_opengl3_loader.h
+        ${SOURCE_DIR}/imgui/imgui_internal.h
+        ${SOURCE_DIR}/imgui/imgui_tables.cpp
+        ${SOURCE_DIR}/imgui/imgui_widgets.cpp
+        ${SOURCE_DIR}/imgui/imgui.cpp
+        ${SOURCE_DIR}/imgui/imgui.h
+        ${SOURCE_DIR}/imgui/imstb_rectpack.h
+        ${SOURCE_DIR}/imgui/imstb_textedit.h
+        ${SOURCE_DIR}/imgui/imstb_truetype.h)
 
 add_executable(opengl-base ${SRC})
+
+target_include_directories(opengl-base PRIVATE ${SOURCE_DIR}/imgui)
 
 # Perform dependency linkage
 include(${CMAKE_DIR}/LinkGLFW.cmake)
