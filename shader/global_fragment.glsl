@@ -10,7 +10,8 @@ struct Material
 uniform Material material;
 
 struct Light {
-    vec3 position;
+    vec4 positionDirection;
+
     vec3 ambient;
     vec3 diffuse;
     vec3 specular;
@@ -32,7 +33,7 @@ void main()
 
     // diffuse
     vec3 normal = normalize(vNormal);
-    vec3 lightDir = normalize(vPos - light.position);
+    vec3 lightDir = light.positionDirection.w == 0.0 ? normalize(vec3(light.positionDirection)) : normalize(vPos - vec3(light.positionDirection));
     float diff = max(dot(normal, -lightDir), 0.0);
     vec3 diffuse = light.diffuse * diff * vec3(texture(material.diffuse, vTexCoords));
 
