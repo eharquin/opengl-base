@@ -315,8 +315,10 @@ int main()
 			glm::vec3 diffuseColor = lightColor * glm::vec3(0.5f);
 			glm::vec3 ambientColor = diffuseColor * glm::vec3(0.2f);
 
-			globalShader.uniformVec3("light.direction", glm::vec3(-0.2f, -1.0f, -0.3f));
-			globalShader.uniformVec4("light.positionDirection", glm::vec4(lightPosition, 1.0f));
+			globalShader.uniformVec3("light.direction", glm::vec3(0.0f, 0.0f, -1.0f));
+			globalShader.uniformVec3("light.position", lightPosition);
+			globalShader.uniform1f("light.cutOff", glm::cos(glm::radians(12.5f)));
+			globalShader.uniform1f("light.outerCutOff", glm::cos(glm::radians(17.5f)));
 
 			globalShader.uniformVec3("light.ambient", ambientColor);
 			globalShader.uniformVec3("light.diffuse", diffuseColor); // darken diffuse light a bit
