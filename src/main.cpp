@@ -37,8 +37,8 @@ int main()
 	// create window (define the viewport by default)
 	int count = 0;
 	GLFWmonitor** monitor = glfwGetMonitors(&count); 
-	const GLFWvidmode* mode = glfwGetVideoMode(monitor[0]);
-	GLFWwindow* window = glfwCreateWindow(mode->width, mode->height, "OPENGLBASE", monitor[0], NULL);
+	const GLFWvidmode* mode = glfwGetVideoMode(monitor[2]);
+	GLFWwindow* window = glfwCreateWindow(mode->width, mode->height, "OPENGLBASE", monitor[2], NULL);
 	if (window == NULL)
 	{
 		glfwTerminate();
@@ -321,6 +321,10 @@ int main()
 			globalShader.uniformVec3("light.ambient", ambientColor);
 			globalShader.uniformVec3("light.diffuse", diffuseColor); // darken diffuse light a bit
 			globalShader.uniformVec3("light.specular", glm::vec3(1.0f, 1.0f, 1.0f));
+
+			globalShader.uniform1f("light.constant", 1.0f);
+			globalShader.uniform1f("light.linear", 0.09f);
+			globalShader.uniform1f("light.quadratic", 0.032f);
 
 			globalShader.uniformVec3("viewPos", camera.position);
 
