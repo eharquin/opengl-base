@@ -9,6 +9,17 @@ struct Material
 };
 uniform Material material;
 
+
+struct DirectionalLight
+{
+    vec3 direction;
+
+    vec3 ambient;
+    vec3 diffuse;
+    vec3 specular;
+};
+uniform DirectionalLight directionalLight;
+
 struct Light {
     vec3 position;
     vec3 direction;
@@ -33,6 +44,31 @@ in vec3 vNormal;
 in vec2 vTexCoords;
 
 out vec4 FragColor;
+
+vec3 ComputeDirectionalLight(DirectionalLight light, vec3 normal, vec3 viewDirection);
+
+// vec3 need to be normalize
+vec3 ComputeDirectionalLight(DirectionalLight light, vec3 normal, vec3 viewDirection)
+{
+    vec3 result;
+
+    // ambient
+    vec3 ambient = light.ambient * vec3(texture(material.diffuse, vTexCoords));
+
+    // diffuse
+    vec3 lightDir = normalize(light.direction);
+    float diff = max(dot(normal, -lightDir), 0.0);
+    vec3 diffuse = light.diffuse * diff * vec3(texture(material.diffuse, vTexCoords));
+
+    // specular
+    vec3 reflectDir = reflect(lightDir, normal);
+    float spec = pow(max(dot(viewDirection, reflectDir), 0.0), material.shininess);
+    vec3 specular = light.specular * spec * vec3(texture(material.specular, vTexCoords));
+
+    return result;
+
+
+}
 
 void main()
 {
