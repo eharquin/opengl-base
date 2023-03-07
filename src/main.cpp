@@ -13,12 +13,22 @@ int lastStateKeyF = GLFW_RELEASE;
 int lastStateKeyF11 = GLFW_RELEASE;
 bool fullScreen = true;
 
-glm::vec3 lightPosition(1.2f, 1.0f, 2.0f);
 float lightMoveSpeed = 2.0f;
 
 glm::vec3 worldRight(1.0f, 0.0f, 0.0f);
 glm::vec3 worldUp(0.0f, 1.0f, 0.0f);
 glm::vec3 worldFront(0.0f, 0.0f, -1.0f);
+
+const int pointLightCount = 4;
+std::vector<glm::vec3> pointLightPositions = {
+	glm::vec3(10.0f, 1.0f, 10.0f),
+	glm::vec3(-10.0f, 1.0f, -10.0f),
+	glm::vec3(10.0f, 1.0f, -10.0f),
+	glm::vec3(-10.0f, 1.0f, 10.0f),
+};
+
+int lastStateKeyT = GLFW_RELEASE;
+bool useSpotLight = true;
 
 
 int main()
@@ -250,6 +260,11 @@ int main()
 	ImGui_ImplOpenGL3_Init("#version 460");
 
 
+	glm::vec3 directionalLightColor(1.0f);
+	glm::vec3 directionalLightDirection(0.0f, -1.0f, 0.0f);
+	glm::vec3 directionalLightSpecular(1.0f, 1.0f, 1.0f);
+
+
 	glm::vec3 lightColor(1.0f);
 
 
@@ -312,21 +327,43 @@ int main()
 			globalShader.uniformMat4("projection", projection);
 
 
+			glm::vec3 directionalDiffuseColor = directionalLightColor * glm::vec3(0.5f);
+			glm::vec3 directionalAmbientColor = directionalDiffuseColor * glm::vec3(0.2f);
+
+			globalShader.uniformVec3("directionalLight.direction", directionalLightDirection);
+			globalShader.uniformVec3("directionalLight.ambient", directionalAmbientColor);
+			globalShader.uniformVec3("directionalLight.diffuse", directionalDiffuseColor);
+			globalShader.uniformVec3("directionalLight.specular", directionalLightSpecular);
+
+
 			glm::vec3 diffuseColor = lightColor * glm::vec3(0.5f);
 			glm::vec3 ambientColor = diffuseColor * glm::vec3(0.2f);
 
-			globalShader.uniformVec3("light.direction", glm::vec3(0.0f, 0.0f, -1.0f));
-			globalShader.uniformVec3("light.position", lightPosition);
-			globalShader.uniform1f("light.cutOff", glm::cos(glm::radians(12.5f)));
-			globalShader.uniform1f("light.outerCutOff", glm::cos(glm::radians(17.5f)));
+			for (int i = 0; i < pointLightCount; i++)
+			{
+				std::string pointLightName = "pointLight[" + std::to_string(i) + "]";
+				globalShader.uniformVec3(pointLightName + ".position", pointLightPositions[i]);
+				globalShader.uniformVec3(pointLightName + ".ambient", ambientColor);
+				globalShader.uniformVec3(pointLightName + ".diffuse", diffuseColor);
+				globalShader.uniformVec3(pointLightName + ".specular", glm::vec3(1.0f, 1.0f, 1.0f));
+				globalShader.uniform1f(pointLightName + ".constant", 1.0f);
+				globalShader.uniform1f(pointLightName + ".linear", 0.09f);
+				globalShader.uniform1f(pointLightName + ".quadratic", 0.032f);
+			}
 
-			globalShader.uniformVec3("light.ambient", ambientColor);
-			globalShader.uniformVec3("light.diffuse", diffuseColor); // darken diffuse light a bit
-			globalShader.uniformVec3("light.specular", glm::vec3(1.0f, 1.0f, 1.0f));
 
-			globalShader.uniform1f("light.constant", 1.0f);
-			globalShader.uniform1f("light.linear", 0.09f);
-			globalShader.uniform1f("light.quadratic", 0.032f);
+			globalShader.uniformVec3("spotLight.direction", camera.front);
+			globalShader.uniformVec3("spotLight.position", camera.position);
+			globalShader.uniform1f("spotLight.innerCutOff", glm::cos(glm::radians(12.5f)));
+			globalShader.uniform1f("spotLight.outerCutOff", glm::cos(glm::radians(17.5f)));
+			globalShader.uniformVec3("spotLight.ambient", ambientColor);
+			globalShader.uniformVec3("spotLight.diffuse", diffuseColor);
+			globalShader.uniformVec3("spotLight.specular", glm::vec3(1.0f, 1.0f, 1.0f));
+			globalShader.uniform1f("spotLight.constant", 1.0f);
+			globalShader.uniform1f("spotLight.linear", 0.09f);
+			globalShader.uniform1f("spotLight.quadratic", 0.032f);
+			globalShader.uniform1i("useSpotLight", useSpotLight);
+
 
 			globalShader.uniformVec3("viewPos", camera.position);
 
@@ -334,28 +371,36 @@ int main()
 			glDrawElements(GL_TRIANGLES, indices.size(), GL_UNSIGNED_INT, GL_NONE);
 		}
 
-		pointLightShader.use();
+		for (int i = 0; i < pointLightCount; i++)
+		{
+			pointLightShader.use();
 
-		glm::mat4 model(1.0f);
-		model = glm::translate(model, lightPosition);
-		model = glm::scale(model, glm::vec3(0.2f));
+			glm::mat4 model(1.0f);
+			model = glm::translate(model, pointLightPositions[i]);
+			model = glm::scale(model, glm::vec3(0.2f));
 
-		glm::mat4 mvp = projection * view * model;
+			glm::mat4 mvp = projection * view * model;
 
-		pointLightShader.uniformMat4("model", model);
-		pointLightShader.uniformMat4("view", view);
-		pointLightShader.uniformMat4("projection", projection);
+			pointLightShader.uniformMat4("model", model);
+			pointLightShader.uniformMat4("view", view);
+			pointLightShader.uniformMat4("projection", projection);
 
-		pointLightShader.uniformVec3("lightColor", lightColor);
+			pointLightShader.uniformVec3("lightColor", lightColor);
 
-		glDrawElements(GL_TRIANGLES, indices.size(), GL_UNSIGNED_INT, GL_NONE);
+			glDrawElements(GL_TRIANGLES, indices.size(), GL_UNSIGNED_INT, GL_NONE);
+		}
 
 
 
 		ImGui::Begin("imgui");
-		ImGui::Text("test");
+		ImGui::Text("camera");
+		ImGui::MenuItem("Menu");
 		ImGui::Checkbox("isPerpective", &camera.isPerspective);
-		ImGui::ColorPicker3("light color", &lightColor[0]);
+		ImGui::Text("directional light");
+		ImGui::ColorEdit3("color", &directionalLightColor[0]);
+		ImGui::DragFloat3("direction", &directionalLightDirection[0]);
+		ImGui::DragFloat3("specular", &directionalLightSpecular[0]);
+
 		ImGui::End();
 
 		ImGui::Render();
@@ -393,7 +438,6 @@ void processInput(GLFWwindow* window, float deltaSeconds)
 		glfwSetWindowShouldClose(window, true);
 
 	int stateKeyF = glfwGetKey(window, GLFW_KEY_F);
-
 	if (stateKeyF == GLFW_PRESS && lastStateKeyF == GLFW_RELEASE)
 	{
 		if(focus)
@@ -402,34 +446,42 @@ void processInput(GLFWwindow* window, float deltaSeconds)
 			glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
 
 		focus = !focus;
+
 	}
+	lastStateKeyF = stateKeyF;
+
+
+	int stateKeyT = glfwGetKey(window, GLFW_KEY_T);
+	if (stateKeyT == GLFW_PRESS && lastStateKeyT == GLFW_RELEASE)
+	{
+		useSpotLight = !useSpotLight;
+	}
+	lastStateKeyT = stateKeyT;
 
 	int stateKeyF11 = glfwGetKey(window, GLFW_KEY_F11);
-
 	if (stateKeyF11 == GLFW_PRESS && lastStateKeyF11 == GLFW_RELEASE)
 	{
 
 	}
-
-	lastStateKeyF = stateKeyF;
+	lastStateKeyF11 = stateKeyF11;
 
 	if(focus)
 		camera.processKeyboardEvent(window, deltaSeconds);
 	else
 	{
 		if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
-			lightPosition += worldFront * lightMoveSpeed * deltaSeconds;
+			pointLightPositions[0] += worldFront * lightMoveSpeed * deltaSeconds;
 		if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)
-			lightPosition -= worldFront * lightMoveSpeed * deltaSeconds;
+			pointLightPositions[0] -= worldFront * lightMoveSpeed * deltaSeconds;
 
 		if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
-			lightPosition += worldRight * lightMoveSpeed * deltaSeconds;
+			pointLightPositions[0] += worldRight * lightMoveSpeed * deltaSeconds;
 		if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS)
-			lightPosition -= worldRight * lightMoveSpeed * deltaSeconds;
+			pointLightPositions[0] -= worldRight * lightMoveSpeed * deltaSeconds;
 
 		if (glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_PRESS)
-			lightPosition += worldUp * lightMoveSpeed * deltaSeconds;
+			pointLightPositions[0] += worldUp * lightMoveSpeed * deltaSeconds;
 		if (glfwGetKey(window, GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS)
-			lightPosition -= worldUp * lightMoveSpeed * deltaSeconds;
+			pointLightPositions[0] -= worldUp * lightMoveSpeed * deltaSeconds;
 	}
 }

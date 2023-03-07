@@ -12,6 +12,7 @@
 
 #include <iostream>
 #include <vector>
+#include <string>
 
 static int WIDTH = 800;
 static int HEIGHT = 600;
