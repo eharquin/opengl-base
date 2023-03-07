@@ -26,6 +26,37 @@ std::vector<glm::vec3> pointLightPositions = {
 	glm::vec3(10.0f, 1.0f, -10.0f),
 	glm::vec3(-10.0f, 1.0f, 10.0f),
 };
+std::vector<glm::vec3> pointLightColors = {
+	glm::vec3(1.0f, 1.0f, 1.0f),
+	glm::vec3(1.0f, 1.0f, 1.0f),
+	glm::vec3(1.0f, 1.0f, 1.0f),
+	glm::vec3(1.0f, 1.0f, 1.0f)
+};
+std::vector<glm::vec3> pointLightSpecular = {
+	glm::vec3(1.0f, 1.0f, 1.0f),
+	glm::vec3(1.0f, 1.0f, 1.0f),
+	glm::vec3(1.0f, 1.0f, 1.0f),
+	glm::vec3(1.0f, 1.0f, 1.0f)
+};
+std::vector<float> pointLightConstants = {
+	1.0f,
+	1.0f,
+	1.0f,
+	1.0f
+};
+std::vector<float> pointLightLinears = {
+	0.09f,
+	0.09f,
+	0.09f,
+	0.09f
+};
+std::vector<float> pointLightQuadratics = {
+	0.032f,
+	0.032f,
+	0.032f,
+	0.032f
+};
+
 
 int lastStateKeyT = GLFW_RELEASE;
 bool useSpotLight = true;
@@ -265,6 +296,19 @@ int main()
 	glm::vec3 directionalLightSpecular(1.0f, 1.0f, 1.0f);
 
 
+	glm::vec3 spotLightDirection(0.0f, 0.0f, -1.0f);
+	glm::vec3 spotLightPosition(0.0f, 0.0f, 2.0f);
+	float innerCutOff = 12.5f;
+	float outerCutOff = 17.5f;
+	glm::vec3 spotLightColor(1.0f);
+	glm::vec3 spotLightLightDirection(0.0f, 0.0f, -1.0f);
+	glm::vec3 spotLightLightSpecular(1.0f, 1.0f, 1.0f);
+	float spotLightConstant = 1.0f;
+	float spotLightLinear = 0.09f;
+	float spotLightQuadratic = 0.032f;
+
+
+
 	glm::vec3 lightColor(1.0f);
 
 
@@ -336,32 +380,35 @@ int main()
 			globalShader.uniformVec3("directionalLight.specular", directionalLightSpecular);
 
 
-			glm::vec3 diffuseColor = lightColor * glm::vec3(0.5f);
-			glm::vec3 ambientColor = diffuseColor * glm::vec3(0.2f);
-
 			for (int i = 0; i < pointLightCount; i++)
 			{
+
+				glm::vec3 pointdiffuseColor = pointLightColors[i] * glm::vec3(0.5f);
+				glm::vec3 pointAmbientColor = pointdiffuseColor * glm::vec3(0.2f);
+
 				std::string pointLightName = "pointLight[" + std::to_string(i) + "]";
 				globalShader.uniformVec3(pointLightName + ".position", pointLightPositions[i]);
-				globalShader.uniformVec3(pointLightName + ".ambient", ambientColor);
-				globalShader.uniformVec3(pointLightName + ".diffuse", diffuseColor);
-				globalShader.uniformVec3(pointLightName + ".specular", glm::vec3(1.0f, 1.0f, 1.0f));
-				globalShader.uniform1f(pointLightName + ".constant", 1.0f);
-				globalShader.uniform1f(pointLightName + ".linear", 0.09f);
-				globalShader.uniform1f(pointLightName + ".quadratic", 0.032f);
+				globalShader.uniformVec3(pointLightName + ".ambient", pointAmbientColor);
+				globalShader.uniformVec3(pointLightName + ".diffuse", pointdiffuseColor);
+				globalShader.uniformVec3(pointLightName + ".specular", pointLightSpecular[i]);
+				globalShader.uniform1f(pointLightName + ".constant", pointLightConstants[i]);
+				globalShader.uniform1f(pointLightName + ".linear", pointLightLinears[i]);
+				globalShader.uniform1f(pointLightName + ".quadratic", pointLightQuadratics[i]);
 			}
 
+			glm::vec3 spotLightDiffuseColor = spotLightColor * glm::vec3(0.5f);
+			glm::vec3 spotLightAmbientColor = spotLightDiffuseColor * glm::vec3(0.2f);
 
-			globalShader.uniformVec3("spotLight.direction", camera.front);
-			globalShader.uniformVec3("spotLight.position", camera.position);
-			globalShader.uniform1f("spotLight.innerCutOff", glm::cos(glm::radians(12.5f)));
-			globalShader.uniform1f("spotLight.outerCutOff", glm::cos(glm::radians(17.5f)));
-			globalShader.uniformVec3("spotLight.ambient", ambientColor);
-			globalShader.uniformVec3("spotLight.diffuse", diffuseColor);
-			globalShader.uniformVec3("spotLight.specular", glm::vec3(1.0f, 1.0f, 1.0f));
-			globalShader.uniform1f("spotLight.constant", 1.0f);
-			globalShader.uniform1f("spotLight.linear", 0.09f);
-			globalShader.uniform1f("spotLight.quadratic", 0.032f);
+			globalShader.uniformVec3("spotLight.direction", spotLightDirection);
+			globalShader.uniformVec3("spotLight.position", spotLightPosition);
+			globalShader.uniform1f("spotLight.innerCutOff", glm::cos(glm::radians(innerCutOff)));
+			globalShader.uniform1f("spotLight.outerCutOff", glm::cos(glm::radians(outerCutOff)));
+			globalShader.uniformVec3("spotLight.ambient", spotLightAmbientColor);
+			globalShader.uniformVec3("spotLight.diffuse", spotLightDiffuseColor);
+			globalShader.uniformVec3("spotLight.specular", spotLightLightSpecular);
+			globalShader.uniform1f("spotLight.constant", spotLightConstant);
+			globalShader.uniform1f("spotLight.linear", spotLightLinear);
+			globalShader.uniform1f("spotLight.quadratic", spotLightQuadratic);
 			globalShader.uniform1i("useSpotLight", useSpotLight);
 
 
@@ -390,16 +437,92 @@ int main()
 			glDrawElements(GL_TRIANGLES, indices.size(), GL_UNSIGNED_INT, GL_NONE);
 		}
 
+		glm::mat4 model(1.0f);
+		model = glm::translate(model, spotLightPosition);
+		model = glm::scale(model, glm::vec3(0.2f, 0.2f, 1.0f));
+
+		glm::mat4 mvp = projection * view * model;
+
+		pointLightShader.uniformMat4("model", model);
+		pointLightShader.uniformMat4("view", view);
+		pointLightShader.uniformMat4("projection", projection);
+
+		pointLightShader.uniformVec3("lightColor", spotLightColor);
+
+		glDrawElements(GL_TRIANGLES, indices.size(), GL_UNSIGNED_INT, GL_NONE);
+
 
 
 		ImGui::Begin("imgui");
 		ImGui::Text("camera");
 		ImGui::MenuItem("Menu");
 		ImGui::Checkbox("isPerpective", &camera.isPerspective);
-		ImGui::Text("directional light");
-		ImGui::ColorEdit3("color", &directionalLightColor[0]);
-		ImGui::DragFloat3("direction", &directionalLightDirection[0]);
-		ImGui::DragFloat3("specular", &directionalLightSpecular[0]);
+		if (ImGui::TreeNode("Light Configuration"))
+		{
+			if (ImGui::TreeNode("Directional Light"))
+			{
+				ImGui::DragFloat3("direction", &directionalLightDirection[0]);
+				ImGui::ColorEdit3("color", &directionalLightColor[0]);
+				ImGui::DragFloat3("specular", &directionalLightSpecular[0]);
+				ImGui::TreePop();
+			}
+			if (ImGui::TreeNode("Point Lights"))
+			{
+				for (int i = 0; i < pointLightCount; i++)
+				{
+					if (ImGui::TreeNode("Point Light " + i))
+					{
+						ImGui::DragFloat3("position", &pointLightPositions[i][0]);
+						ImGui::ColorEdit3("color", &pointLightColors[i][0]);
+						ImGui::DragFloat3("specular", &pointLightSpecular[i][0]);
+						ImGui::DragFloat("constant", &pointLightConstants[i]);
+						ImGui::DragFloat("linear", &pointLightLinears[i]);
+						ImGui::DragFloat("quadratic", &pointLightQuadratics[i]);
+						ImGui::TreePop();
+					}
+				}
+				ImGui::TreePop();
+			}
+			if (ImGui::TreeNode("Spot Light"))
+			{
+				ImGui::DragFloat3("position", &spotLightPosition[0]);
+				ImGui::DragFloat3("direction", &spotLightDirection[0]);
+				ImGui::SliderFloat("innerCutOff", &innerCutOff, 0.0f, outerCutOff);
+				ImGui::SliderFloat("outerCutOff", &outerCutOff, 0.0f, 90.0f);
+				ImGui::ColorEdit3("color", &spotLightColor[0]);
+				ImGui::DragFloat3("specular", &spotLightLightSpecular[0]);
+				ImGui::DragFloat("constant", &spotLightConstant);
+				ImGui::DragFloat("linear", &spotLightLinear);
+				ImGui::DragFloat("quadratic", &spotLightQuadratic);
+				ImGui::TreePop();
+			}
+			ImGui::TreePop();
+		}
+		
+
+
+
+		//if (ImGui::TreeNode("Basic trees"))
+		//{
+		//	for (int i = 0; i < 5; i++)
+		//	{
+		//		// Use SetNextItemOpen() so set the default state of a node to be open. We could
+		//		// also use TreeNodeEx() with the ImGuiTreeNodeFlags_DefaultOpen flag to achieve the same thing!
+		//		if (i == 0)
+		//			ImGui::SetNextItemOpen(true, ImGuiCond_Once);
+
+		//		if (ImGui::TreeNode((void*)(intptr_t)i, "Child %d", i))
+		//		{
+		//			ImGui::Text("blah blah");
+		//			ImGui::SameLine();
+		//			if (ImGui::SmallButton("button")) {}
+		//			ImGui::TreePop();
+		//		}
+		//	}
+		//	ImGui::TreePop();
+		//}
+
+		ImGui::ShowDemoWindow();
 
 		ImGui::End();
 
