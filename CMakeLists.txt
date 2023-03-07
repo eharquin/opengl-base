@@ -8,7 +8,7 @@ project(OpenGL-Base CXX)
 # desired options on. Open an issue for additional default support.
 # See: https://github.com/Hoshiningen/OpenGL-Template/issues
 
-#set(ENABLE_ASSIMP   ON CACHE BOOL "Add Open Asset Import Library (assimp) to the project" FORCE)
+set(ENABLE_ASSIMP   ON CACHE BOOL "Add Open Asset Import Library (assimp) to the project" FORCE)
 set(ENABLE_GLM   ON CACHE BOOL "Add GLM to the project" FORCE)
 set(ENABLE_STB   ON CACHE BOOL "Add STB to the project" FORCE)
 
