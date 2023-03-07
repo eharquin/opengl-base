@@ -1,7 +1,7 @@
 #include "openglbase.h"
 
 const int WIDTH = 800;
-const int HEIGHT = 800;
+const int HEIGHT = 400;
 
 const unsigned short OPENGL_MAJOR_VERSION = 4;
 const unsigned short OPENGL_MINOR_VERSION = 6;
@@ -9,17 +9,29 @@ const unsigned short OPENGL_MINOR_VERSION = 6;
 const char* vertexShaderSource = 
 "#version 460 core\n"
 "layout (location = 0) in vec2 aPos;\n"
+"layout (location = 1) in vec3 aColor;\n"
+"out vec3 vColor;\n"
+"out vec2 vPos;\n"
+
 "void main()\n"
 "{\n"
 "   gl_Position = vec4(aPos.x, aPos.y, 0.0, 1.0);\n"
+"   vColor = aColor;\n"
+"   vPos = aPos;\n"
 "}\0";
 
 const char* fragmentShaderSource = 
 "#version 460 core\n"
+"in vec3 vColor;\n"
+"in vec2 vPos;\n"
 "out vec4 FragColor;\n"
+"uniform vec4 color;\n"
 "void main()\n"
 "{\n"
-"    FragColor = vec4(.4f, 0.3f, 0.7f, 1.0f);\n"
+"    vec3 denorm = (vColor * 255.0) / ((vPos.x + vPos.y) * 100);\n"
+"    vec3 rounded = round(denorm);\n"
+"    vec3 result = (rounded * ((vPos.x + vPos.y) * 100)) / 255.0;\n"
+"    FragColor = vec4(result, 1.0);\n"
 "}\n";
 
 int main()
@@ -33,7 +45,7 @@ int main()
 	glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, OPENGL_MAJOR_VERSION);
 	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, OPENGL_MINOR_VERSION);
 	glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
-	glfwWindowHint(GLFW_RESIZABLE, GLFW_FALSE);
+	glfwWindowHint(GLFW_RESIZABLE, GLFW_TRUE);
 
 	// create window (define the viewport by default)
 	GLFWwindow* window = glfwCreateWindow(WIDTH, HEIGHT, "OPENGLBASE", NULL, NULL);
@@ -114,12 +126,13 @@ int main()
 	// init angle at 90° : first vertex will be in [0; 1]
 	float angle = glm::pi<float>() / 2;
 	int count = 0;
+	float radius = 0.8f;
 
 	while (angle <= (glm::pi<float>() * 2))
 	{
 		glm::vec2 v;
-		v.x = cos(angle);
-		v.y = sin(angle);
+		v.x = radius * cos(angle);
+		v.y = radius * sin(angle);
 
 		vertices.push_back(v);
 		angle += two_pi_over_three;
@@ -128,6 +141,13 @@ int main()
 	// -----------------------------------------------------------------------------------
 	// -----------------------------------------------------------------------------------
 
+	std::vector<float> colorVertices =
+	{
+		vertices[0].x, vertices[0].y, 1.0f, 0.0f, 0.0f,
+		vertices[1].x, vertices[1].y, 0.0f, 1.0f, 0.0f,
+		vertices[2].x, vertices[2].y, 0.0f, 0.0f, 1.0f
+	};
+
 
 	// -----------------------------------------------------------------------------------
 	// create vertex buffer object and vertex arrays
@@ -135,17 +155,21 @@ int main()
 
 	// create vertex buffer object to store raw vertices
 	glCreateBuffers(1, &VBO);
-	glNamedBufferData(VBO, vertices.size() * sizeof(glm::vec2), vertices.data(), GL_DYNAMIC_DRAW);
+	glNamedBufferData(VBO, colorVertices.size() * sizeof(float), colorVertices.data(), GL_DYNAMIC_DRAW);
 
 	// create vertex array to store the organized vertices
 	glCreateVertexArrays(1, &VAO);
 
 
-	glVertexArrayVertexBuffer(VAO, 0, VBO, 0, 2 * sizeof(float));
+	glVertexArrayVertexBuffer(VAO, 0, VBO, 0, 5 * sizeof(float));
 
 	glEnableVertexArrayAttrib(VAO, 0);
 	glVertexArrayAttribFormat(VAO, 0, 2, GL_FLOAT, false, 0);
 	glVertexArrayAttribBinding(VAO, 0, 0);
+
+	glEnableVertexArrayAttrib(VAO, 1);
+	glVertexArrayAttribFormat(VAO, 1, 3, GL_FLOAT, false, 2 * sizeof(float));
+	glVertexArrayAttribBinding(VAO, 1, 0);
 	// -----------------------------------------------------------------------------------
 	// -----------------------------------------------------------------------------------
 
@@ -168,17 +192,37 @@ int main()
 			vertices[i].x = x;
 			vertices[i].y = y;
 		}
-		glNamedBufferData(VBO, vertices.size() * sizeof(glm::vec2), vertices.data(), GL_DYNAMIC_DRAW);
+
+		std::vector<float> colorVertices =
+		{
+			vertices[0].x, vertices[0].y, 1.0f, 0.0f, 0.0f,
+			vertices[1].x, vertices[1].y, 0.0f, 1.0f, 0.0f,
+			vertices[2].x, vertices[2].y, 0.0f, 0.0f, 1.0f
+		};
+
+		//std::vector<float> colorVertices =
+		//{
+		//	0.0f, 0.25f, 1.0f, 0.0f, 0.0f,
+		//	0.25f, -0.25f, 0.0f, 1.0f, 0.0f,
+		//	-0.25f, -0.25f, 0.0f, 0.0f, 1.0f
+		//};
+
+		glNamedBufferData(VBO, colorVertices.size() * sizeof(float), colorVertices.data(), GL_DYNAMIC_DRAW);
 
 		// clear the screen with the clear color
 		glClear(GL_COLOR_BUFFER_BIT);
 
+		glm::vec4 color(1.0f);
 		glUseProgram(shaderProgram);
+		glUniform4fv(glGetUniformLocation(shaderProgram, "color"), 1, &color[0]);
+
 		glBindVertexArray(VAO);
 		glDrawArrays(GL_TRIANGLES, 0, count);
 
 		// compute events of the window
 		glfwPollEvents();
+
+
 
 		// swap the two buffers (Front -> Back | Back -> Front)
 		glfwSwapBuffers(window);
