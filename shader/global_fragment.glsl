@@ -2,9 +2,8 @@
 
 struct Material
 {
-    sampler2D diffuse;
-    sampler2D specular;
-    sampler2D emission;
+    sampler2D texture_diffuse[16];
+    sampler2D texture_specular[16];
     float shininess;
 };
 uniform Material material;
@@ -68,17 +67,17 @@ vec3 ComputeDirectionalLight(DirectionalLight light, vec3 normal, vec3 viewDirec
     vec3 result;
 
     // ambient
-    vec3 ambient = light.ambient * vec3(texture(material.diffuse, vTexCoords));
+    vec3 ambient = light.ambient * vec3(texture(material.texture_diffuse[0], vTexCoords));
 
     // diffuse
     vec3 lightDir = normalize(light.direction);
     float diff = max(dot(normal, -lightDir), 0.0);
-    vec3 diffuse = light.diffuse * diff * vec3(texture(material.diffuse, vTexCoords));
+    vec3 diffuse = light.diffuse * diff * vec3(texture(material.texture_diffuse[0], vTexCoords));
 
     // specular
     vec3 reflectDir = reflect(lightDir, normal);
     float spec = pow(max(dot(viewDirection, reflectDir), 0.0), material.shininess);
-    vec3 specular = light.specular * spec * vec3(texture(material.specular, vTexCoords));
+    vec3 specular = light.specular * spec * vec3(texture(material.texture_specular[0], vTexCoords));
 
     return ambient + diffuse + specular;
 }
@@ -87,17 +86,17 @@ vec3 ComputeDirectionalLight(DirectionalLight light, vec3 normal, vec3 viewDirec
 vec3 ComputePointLight(PointLight light, vec3 normal, vec3 viewDirection)
 {
     // ambient
-    vec3 ambient = light.ambient * vec3(texture(material.diffuse, vTexCoords));
+    vec3 ambient = light.ambient * vec3(texture(material.texture_diffuse[0], vTexCoords));
 
     // diffuse
     vec3 lightDir = normalize(vPos - light.position);
     float diff = max(dot(normal, -lightDir), 0.0);
-    vec3 diffuse = light.diffuse * diff * vec3(texture(material.diffuse, vTexCoords));
+    vec3 diffuse = light.diffuse * diff * vec3(texture(material.texture_diffuse[0], vTexCoords));
 
     // specular
     vec3 reflectDir = reflect(lightDir, normal);
     float spec = pow(max(dot(viewDirection, reflectDir), 0.0), material.shininess);
-    vec3 specular = light.specular * spec * vec3(texture(material.specular, vTexCoords));
+    vec3 specular = light.specular * spec * vec3(texture(material.texture_specular[0], vTexCoords));
 
     // attenuation
     float distanceToLight = length(vec3(light.position) - vPos);
@@ -110,17 +109,17 @@ vec3 ComputePointLight(PointLight light, vec3 normal, vec3 viewDirection)
 vec3 ComputeSpotLight(SpotLight light, vec3 normal, vec3 viewDirection)
 {
     // ambient
-    vec3 ambient = light.ambient * vec3(texture(material.diffuse, vTexCoords));
+    vec3 ambient = light.ambient * vec3(texture(material.texture_diffuse[0], vTexCoords));
 
     // diffuse
     vec3 lightDir = normalize(vPos - light.position);
     float diff = max(dot(normal, -lightDir), 0.0);
-    vec3 diffuse = light.diffuse * diff * vec3(texture(material.diffuse, vTexCoords));
+    vec3 diffuse = light.diffuse * diff * vec3(texture(material.texture_diffuse[0], vTexCoords));
 
     // specular
     vec3 reflectDir = reflect(lightDir, normal);
     float spec = pow(max(dot(viewDirection, reflectDir), 0.0), material.shininess);
-    vec3 specular = light.specular * spec * vec3(texture(material.specular, vTexCoords));
+    vec3 specular = light.specular * spec * vec3(texture(material.texture_specular[0], vTexCoords));
 
     // attenuation
     float distanceToLight = length(vec3(light.position) - vPos);
