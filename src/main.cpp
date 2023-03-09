@@ -2,6 +2,8 @@
 #include "shader.h"
 #include "flyingCamera.h"
 #include "texture.h"
+#include "model.h"
+#include "tiny_obj_loader.h"
 
 void processInput(GLFWwindow* window, float deltaSeconds);
 
@@ -131,9 +133,8 @@ int main()
 
 	// -----------------------------------------------------------------------------------
 	// create texture
-	Texture containerTexture("texture/container.png");
-	Texture containerSpecularTexture("texture/container_specular.png");
-	Texture emissionTexture("texture/container_emission.png");
+	Texture containerTexture("model/diffuse.jpg", "diffuse_texture");
+	Texture containerSpecularTexture("model/specular.jpg", "specular_texture");
 	// -----------------------------------------------------------------------------------
 	// -----------------------------------------------------------------------------------
 
@@ -190,8 +191,7 @@ int main()
 	// ---------------------------------------------------------------------------------
 	// ---------------------------------------------------------------------------------
 
-
-
+	Model backpack("model/backpack.obj");
 
 	// -----------------------------------------------------------------------------------
 	// create vertex buffer object and vertex arrays
@@ -348,22 +348,22 @@ int main()
 		// bind texture and add a int uniform with the texture unit
 		containerTexture.bind(0);
 		containerSpecularTexture.bind(1);
-		emissionTexture.bind(2);
 
 		globalShader.uniform1i("material.diffuse", 0);
 		globalShader.uniform1i("material.specular", 1);
-		globalShader.uniform1i("material.emission", 2);
 
 		globalShader.uniform1f("material.shininess", 32.0f);
 
+		glm::mat4 model(1.0f);
 		glm::mat4 view = camera.view();
 		glm::mat4 projection = camera.projection();
 
 		for (unsigned int i = 0; i < cubePositions.size(); i++)
 		{
-			glm::mat4 model(1.0f);
+			model = glm::mat4(1.0f);
 			model = glm::translate(model, cubePositions[i]);
 			model = glm::rotate(model, theta, cubeRotations[i]);
+			model = glm::scale(model, glm::vec3(0.2f));
 			theta += angle * deltaSeconds;
 
 			globalShader.uniformMat4("model", model);
@@ -415,18 +415,18 @@ int main()
 			globalShader.uniformVec3("viewPos", camera.position);
 
 
-			glDrawElements(GL_TRIANGLES, indices.size(), GL_UNSIGNED_INT, GL_NONE);
+			//glDrawElements(GL_TRIANGLES, indices.size(), GL_UNSIGNED_INT, GL_NONE);
+
+			backpack.Draw(globalShader);
 		}
 
+
+		pointLightShader.use();
 		for (int i = 0; i < pointLightCount; i++)
 		{
-			pointLightShader.use();
-
-			glm::mat4 model(1.0f);
+			model = glm::mat4(1.0f);
 			model = glm::translate(model, pointLightPositions[i]);
 			model = glm::scale(model, glm::vec3(0.2f));
-
-			glm::mat4 mvp = projection * view * model;
 
 			pointLightShader.uniformMat4("model", model);
 			pointLightShader.uniformMat4("view", view);
@@ -437,11 +437,9 @@ int main()
 			glDrawElements(GL_TRIANGLES, indices.size(), GL_UNSIGNED_INT, GL_NONE);
 		}
 
-		glm::mat4 model(1.0f);
+		model = glm::mat4(1.0f);
 		model = glm::translate(model, spotLightPosition);
 		model = glm::scale(model, glm::vec3(0.2f, 0.2f, 1.0f));
-
-		glm::mat4 mvp = projection * view * model;
 
 		pointLightShader.uniformMat4("model", model);
 		pointLightShader.uniformMat4("view", view);
@@ -451,6 +449,9 @@ int main()
 
 		glDrawElements(GL_TRIANGLES, indices.size(), GL_UNSIGNED_INT, GL_NONE);
 
+
+
+		
 
 
 		ImGui::Begin("imgui");
