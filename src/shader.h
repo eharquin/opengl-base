@@ -26,9 +26,9 @@ public:
 
 	void use();
 
-	void uniform1i(const std::string& name, int value);
-	void uniform1f(const std::string& name, float value);
-	void uniformMat4(const std::string& name, glm::mat4 value);
-	void uniformVec3(const std::string& name, glm::vec3 value);
-	void uniformVec4(const std::string& name, glm::vec4 value);
+	void uniform1i(const std::string& name, int value) const;
+	void uniform1f(const std::string& name, float value) const;
+	void uniformMat4(const std::string& name, glm::mat4 value) const;
+	void uniformVec3(const std::string& name, glm::vec3 value) const;
+	void uniformVec4(const std::string& name, glm::vec4 value) const;
 };
