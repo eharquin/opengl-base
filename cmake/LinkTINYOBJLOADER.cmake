@@ -4,7 +4,7 @@ macro(LinkTINYOBJLOADER TARGET ACCESS)
     FetchContent_Declare(
         tinyobjloader
         GIT_REPOSITORY https://github.com/tinyobjloader/tinyobjloader
-        GIT_TAG v1.0.6
+        GIT_TAG v2.0-rc1
     )
 
     FetchContent_GetProperties(tinyobjloader)

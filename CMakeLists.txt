@@ -8,10 +8,10 @@ project(OpenGL-Base CXX)
 # desired options on. Open an issue for additional default support.
 # See: https://github.com/Hoshiningen/OpenGL-Template/issues
 
-set(ENABLE_ASSIMP   ON CACHE BOOL "Add Open Asset Import Library (assimp) to the project" FORCE)
 set(ENABLE_GLM   ON CACHE BOOL "Add GLM to the project" FORCE)
 set(ENABLE_STB   ON CACHE BOOL "Add STB to the project" FORCE)
-set(ENABLE_TINYOBJLOADER   ON CACHE BOOL "Add STB to the project" FORCE)
+#set(ENABLE_ASSIMP   ON CACHE BOOL "Add Open Asset Import Library (assimp) to the project" FORCE)
+set(ENABLE_TINYOBJLOADER   ON CACHE BOOL "Add TINYOBJLOADER to the project" FORCE)
 
 #===========================================================================================
 # GLAD CONFIGURATION
@@ -71,7 +71,7 @@ set(SRC ${SOURCE_DIR}/main.cpp
         ${SOURCE_DIR}/imgui/imgui.h
         ${SOURCE_DIR}/imgui/imstb_rectpack.h
         ${SOURCE_DIR}/imgui/imstb_textedit.h
-        ${SOURCE_DIR}/imgui/imstb_truetype.h)
+        ${SOURCE_DIR}/imgui/imstb_truetype.h "src/material.h" "src/material.cpp")
 
 add_executable(opengl-base ${SRC})
 
@@ -93,11 +93,6 @@ else()
 endif()
 
 # Handle the optional libraries
-if (${ENABLE_ASSIMP})
-    include(${CMAKE_DIR}/LinkASSIMP.cmake)
-    LinkASSIMP(opengl-base PRIVATE)
-endif()
-
 if (${ENABLE_GLM})
     include(${CMAKE_DIR}/LinkGLM.cmake)
     LinkGLM(opengl-base PRIVATE)
@@ -106,6 +101,11 @@ endif()
 if (${ENABLE_STB})
     include(${CMAKE_DIR}/LinkSTB.cmake)
     LinkSTB(opengl-base PRIVATE)
+endif()
+
+if (${ENABLE_ASSIMP})
+    include(${CMAKE_DIR}/LinkASSIMP.cmake)
+    LinkASSIMP(opengl-base PRIVATE)
 endif()
 
 if(${ENABLE_TINYOBJLOADER})

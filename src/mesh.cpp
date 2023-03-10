@@ -1,7 +1,7 @@
 #include "mesh.h"
 
-Mesh::Mesh(std::vector<Vertex>&& vertices, std::vector<unsigned int>&& indices, std::vector<Texture>&& textures)
-	: vertices(std::move(vertices)), indices(std::move(indices)), textures(std::move(textures))
+Mesh::Mesh(std::vector<Vertex>&& vertices, std::vector<unsigned int>&& indices, unsigned int materialId)
+	: vertices(std::move(vertices)), indices(std::move(indices)), materialId(materialId)
 {
 	setup();
 }
@@ -12,15 +12,11 @@ Mesh::~Mesh()
 }
 
 Mesh::Mesh(Mesh&& other)
-	: VAO(other.VAO), VBO(other.VBO), EBO(other.EBO), vertices(other.vertices), indices(other.indices), textures(std::move(other.textures))
+	: VAO(other.VAO), VBO(other.VBO), EBO(other.EBO), vertices(other.vertices), indices(other.indices), materialId(other.materialId)
 {
 	other.VAO = GL_NONE;
 	other.VBO = GL_NONE;
 	other.EBO = GL_NONE;
-
-	other.vertices = std::vector<Vertex>();
-	other.indices = std::vector<unsigned int>();
-	other.textures = std::vector<Texture>();
 }
 
 Mesh& Mesh::operator=(Mesh&& other)
@@ -40,21 +36,23 @@ Mesh& Mesh::operator=(Mesh&& other)
 	return *this;
 }
 
-void Mesh::Draw(const Shader& shader) const
+void Mesh::Draw(const Shader& shader, const Material& material) const
 {
-	unsigned int diffuseTextureCount = 0;
-	unsigned int specularTextureCount = 0;
 
-	for (int i = 0; i < textures.size(); i++)
-	{
-		textures[i].bind(GL_TEXTURE0 + i);
+	shader.uniform1i("material.has_ambient_texture", material.ambientTextureId);
+	if(material.ambientTextureId != -1)
+		shader.uniform1i("material.texture_ambient",  material.ambientTextureId);
+	
+	shader.uniform1i("material.has_diffuse_texture", material.diffuseTextureId);
+	if (material.diffuseTextureId != -1)
+		shader.uniform1i("material.texture_diffuse",  material.diffuseTextureId);
 
-		if(textures[i].type() == "texture_diffuse")
-			shader.uniform1i("material.texture_diffuse[" + std::to_string(diffuseTextureCount++) + "]", i);
+	shader.uniform1i("material.has_specular_texture", material.specularTextureId);
+	if (material.specularTextureId != -1)
+		shader.uniform1i("material.texture_specular", material.specularTextureId);
 
-		if (textures[i].type() == "texture_specular")
-			shader.uniform1i("material.texture_specular[" + std::to_string(specularTextureCount++) + "]", i);
-	}
+	shader.uniform1i("material.shininess", 32);
+
 
 	glBindVertexArray(VAO);
 	glDrawElements(GL_TRIANGLES, static_cast<unsigned int>(indices.size()), GL_UNSIGNED_INT, 0);

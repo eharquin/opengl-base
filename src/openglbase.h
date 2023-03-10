@@ -10,11 +10,17 @@
 #include "glm/gtc/constants.hpp"
 #include "glm/gtc/matrix_transform.hpp"
 
+#define GLM_ENABLE_EXPERIMENTAL
+#include <glm/gtx/hash.hpp>
+
 #include <iostream>
 #include <vector>
 #include <string>
 #include <utility>
 #include <iterator>
+#include <unordered_map>
+#include <functional>
+
 
 static int WIDTH = 800;
 static int HEIGHT = 600;

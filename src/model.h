@@ -2,10 +2,6 @@
 #include "openglbase.h"
 #include "mesh.h"
 
-#include <assimp/Importer.hpp>
-#include <assimp/scene.h>
-#include <assimp/postprocess.h>
-
 class Model
 {
 public:
@@ -24,14 +20,15 @@ public:
 private:
 	std::vector<Mesh> meshes;
 	std::vector<Texture> loadedTextures;
+	std::vector<Material> materials;
 	std::string directory;
 
 	void loadModel(const std::string& path);
 
-	void processNode(aiNode* node, const aiScene* scene);
-	Mesh processMesh(aiMesh* mesh, const aiScene* scene);
+	//void processNode(aiNode* node, const aiScene* scene);
+	//Mesh processMesh(aiMesh* mesh, const aiScene* scene);
 
-	std::vector<Texture> loadMaterialTextures(aiMaterial* material, aiTextureType textureType, std::string typeName);
+	//std::vector<Texture> loadMaterialTextures(aiMaterial* material, aiTextureType textureType, std::string typeName);
 
 
 };
