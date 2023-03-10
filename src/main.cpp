@@ -3,7 +3,7 @@
 #include "flyingCamera.h"
 #include "texture.h"
 #include "model.h"
-#include "tiny_obj_loader.h"
+
 
 void processInput(GLFWwindow* window, float deltaSeconds);
 
@@ -81,15 +81,12 @@ int main()
 	int count = 0;
 	GLFWmonitor** monitor = glfwGetMonitors(&count); 
 	const GLFWvidmode* mode = glfwGetVideoMode(monitor[2]);
-	GLFWwindow* window = glfwCreateWindow(mode->width, mode->height, "OPENGLBASE", monitor[2], NULL);
+	GLFWwindow* window = glfwCreateWindow(WIDTH, HEIGHT, "OPENGLBASE", NULL, NULL);
 	if (window == NULL)
 	{
 		glfwTerminate();
 		throw std::runtime_error("Failed to create the GLFW window");
 	}
-
-	WIDTH = mode->width;
-	HEIGHT = mode->height;
 
 	// introduce the window into the current context
 	glfwMakeContextCurrent(window);
@@ -123,6 +120,9 @@ int main()
 	// ---------------------------------------------------------------------------------
 	// ---------------------------------------------------------------------------------
 
+	Model testModel("model/backpack/backpack.obj");
+
+
 
 	// ---------------------------------------------------------------------------------
 	// create vertexshader, fragmentshader, compile them and link to the shader program
@@ -133,8 +133,7 @@ int main()
 
 	// -----------------------------------------------------------------------------------
 	// create texture
-	Texture containerTexture("model/diffuse.jpg", "diffuse_texture");
-	Texture containerSpecularTexture("model/specular.jpg", "specular_texture");
+	// 
 	// -----------------------------------------------------------------------------------
 	// -----------------------------------------------------------------------------------
 
@@ -191,7 +190,6 @@ int main()
 	// ---------------------------------------------------------------------------------
 	// ---------------------------------------------------------------------------------
 
-	Model backpack("model/backpack.obj");
 
 	// -----------------------------------------------------------------------------------
 	// create vertex buffer object and vertex arrays
@@ -345,26 +343,19 @@ int main()
 		// use the principal shader program
 		globalShader.use();
 
-		// bind texture and add a int uniform with the texture unit
-		containerTexture.bind(0);
-		containerSpecularTexture.bind(1);
-
-		globalShader.uniform1i("material.diffuse", 0);
-		globalShader.uniform1i("material.specular", 1);
-
-		globalShader.uniform1f("material.shininess", 32.0f);
+		
 
 		glm::mat4 model(1.0f);
 		glm::mat4 view = camera.view();
 		glm::mat4 projection = camera.projection();
 
-		for (unsigned int i = 0; i < cubePositions.size(); i++)
+		for (unsigned int i = 0; i < 1; i++)
 		{
 			model = glm::mat4(1.0f);
 			model = glm::translate(model, cubePositions[i]);
 			model = glm::rotate(model, theta, cubeRotations[i]);
-			model = glm::scale(model, glm::vec3(0.2f));
-			theta += angle * deltaSeconds;
+			model = glm::scale(model, glm::vec3(1.0f));
+			//theta += angle * deltaSeconds;
 
 			globalShader.uniformMat4("model", model);
 			globalShader.uniformMat4("view", view);
@@ -415,9 +406,11 @@ int main()
 			globalShader.uniformVec3("viewPos", camera.position);
 
 
-			//glDrawElements(GL_TRIANGLES, indices.size(), GL_UNSIGNED_INT, GL_NONE);
+			
 
-			backpack.Draw(globalShader);
+			testModel.Draw(globalShader);
+
+			//glDrawElements(GL_TRIANGLES, indices.size(), GL_UNSIGNED_INT, GL_NONE);
 		}
 
 

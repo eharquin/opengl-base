@@ -1,13 +1,28 @@
 #pragma once
 #include "openglbase.h"
 #include "shader.h"
-#include "texture.h"
+#include "material.h"
 
 struct Vertex
 {
 	glm::vec3 position;
 	glm::vec3 normal;
 	glm::vec2 uv;
+
+	inline bool operator==(const Vertex& other) const {
+		return position == other.position && uv == other.uv && normal == other.normal;
+	}
+};
+
+// implementation of hash calculation for Vertex
+template<> struct std::hash<Vertex>
+{
+	size_t operator()(Vertex const& vertex) const
+	{
+		return ((std::hash<glm::vec3>()(vertex.position) ^
+			(std::hash<glm::vec3>()(vertex.normal) << 1)) >> 1) ^
+			(std::hash<glm::vec2>()(vertex.uv) << 1);
+	}
 };
 
 class Mesh
@@ -15,9 +30,9 @@ class Mesh
 public:
 	std::vector<Vertex> vertices;
 	std::vector<unsigned int> indices;
-	std::vector<Texture> textures;
+	unsigned int materialId;
 
-	Mesh(std::vector<Vertex>&& vertices, std::vector<unsigned int>&& indices, std::vector<Texture>&& textures);
+	Mesh(std::vector<Vertex>&& vertices, std::vector<unsigned int>&& indices, unsigned int materialId);
 
 	~Mesh();
 
@@ -30,7 +45,7 @@ public:
 	// define move assignement operator
 	Mesh& operator=(Mesh&& other);
 
-	void Draw (const Shader& shader) const;
+	void Draw (const Shader& shader, const Material& material) const;
 
 private:
 	GLuint VAO, VBO, EBO;
