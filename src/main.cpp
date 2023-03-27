@@ -3,6 +3,9 @@
 #include "flyingCamera.h"
 #include "texture.h"
 #include "model.h"
+#include "sphere.h"
+#include "light.h"
+#include "cube.h"
 
 
 void processInput(GLFWwindow* window, float deltaSeconds);
@@ -11,57 +14,27 @@ FlyingCamera camera;
 
 bool focus = true;
 int lastStateKeyF = GLFW_RELEASE;
+glm::vec2 lastMousePosition;
 
 int lastStateKeyF11 = GLFW_RELEASE;
 bool fullScreen = true;
 
-float lightMoveSpeed = 2.0f;
-
-glm::vec3 worldRight(1.0f, 0.0f, 0.0f);
-glm::vec3 worldUp(0.0f, 1.0f, 0.0f);
-glm::vec3 worldFront(0.0f, 0.0f, -1.0f);
-
-const int pointLightCount = 4;
-std::vector<glm::vec3> pointLightPositions = {
-	glm::vec3(10.0f, 1.0f, 10.0f),
-	glm::vec3(-10.0f, 1.0f, -10.0f),
-	glm::vec3(10.0f, 1.0f, -10.0f),
-	glm::vec3(-10.0f, 1.0f, 10.0f),
-};
-std::vector<glm::vec3> pointLightColors = {
-	glm::vec3(1.0f, 1.0f, 1.0f),
-	glm::vec3(1.0f, 1.0f, 1.0f),
-	glm::vec3(1.0f, 1.0f, 1.0f),
-	glm::vec3(1.0f, 1.0f, 1.0f)
-};
-std::vector<glm::vec3> pointLightSpecular = {
-	glm::vec3(1.0f, 1.0f, 1.0f),
-	glm::vec3(1.0f, 1.0f, 1.0f),
-	glm::vec3(1.0f, 1.0f, 1.0f),
-	glm::vec3(1.0f, 1.0f, 1.0f)
-};
-std::vector<float> pointLightConstants = {
-	1.0f,
-	1.0f,
-	1.0f,
-	1.0f
-};
-std::vector<float> pointLightLinears = {
-	0.09f,
-	0.09f,
-	0.09f,
-	0.09f
-};
-std::vector<float> pointLightQuadratics = {
-	0.032f,
-	0.032f,
-	0.032f,
-	0.032f
-};
-
+float lightMoveSpeed = 5.0f;
 
 int lastStateKeyT = GLFW_RELEASE;
 bool useSpotLight = true;
+
+
+DirectionalLight directionalLight(glm::vec3(1.0f), glm::vec3(0.0f, -1.0f, 0.0f), glm::vec3(1.0f));
+
+std::vector<PointLight> pointLights = {
+	PointLight(glm::vec3(1.0f), glm::vec3(10.0f, 1.0f, 10.0f), glm::vec3(1.0f), 1.0f, 0.09f, 0.032f),
+	PointLight(glm::vec3(1.0f), glm::vec3(-10.0f, 1.0f, -10.0f), glm::vec3(1.0f), 1.0f, 0.09f, 0.032f),
+	PointLight(glm::vec3(1.0f), glm::vec3(10.0f, 1.0f, -10.0f), glm::vec3(1.0f), 1.0f, 0.09f, 0.032f),
+	PointLight(glm::vec3(1.0f), glm::vec3(-10.0f, 1.0f, 10.0f), glm::vec3(1.0f), 1.0f, 0.09f, 0.032f)
+};
+
+SpotLight spotLight(glm::vec3(1.0f), glm::vec3(0.0f, 0.0f, -1.0f), glm::vec3(0.0f, 0.0f, 2.0f), glm::vec3(1.0f), 12.5f, 17.5f, 1.0f, 0.09f, 0.032);
 
 
 int main()
@@ -120,9 +93,15 @@ int main()
 	// ---------------------------------------------------------------------------------
 	// ---------------------------------------------------------------------------------
 
-	Model testModel("model/backpack/backpack.obj");
+	//Model testModel("model/backpack/backpack.obj");
+	
+	Material material("sphere material", 0, 0, 0, glm::vec3(1.0f), glm::vec3(1.0f), 256);
+
+	Model testSphere(Sphere(), material);
 
 
+
+	Model testCube(Cube(), Material("cube material", 0, 0, 0, glm::vec3(1.0f), glm::vec3(1.0f), 256));
 
 	// ---------------------------------------------------------------------------------
 	// create vertexshader, fragmentshader, compile them and link to the shader program
@@ -133,141 +112,8 @@ int main()
 
 	// -----------------------------------------------------------------------------------
 	// create texture
-	// 
-	// -----------------------------------------------------------------------------------
-	// -----------------------------------------------------------------------------------
-
-
-	// ---------------------------------------------------------------------------------
-	// 3d model of a 1x1x1 cube 
-	std::vector<float> vertices = {
-		// positions         // normals          // texture coords
-		-0.5f, -0.5f, -0.5f, 0.0f,  0.0f, -1.0f, 0.0f, 0.0f,
-		 0.5f, -0.5f, -0.5f, 0.0f,  0.0f, -1.0f, 1.0f, 0.0f,
-		 0.5f,  0.5f, -0.5f, 0.0f,  0.0f, -1.0f, 1.0f, 1.0f,
-		-0.5f,  0.5f, -0.5f, 0.0f,  0.0f, -1.0f, 0.0f, 1.0f,
-
-		-0.5f, -0.5f,  0.5f, 0.0f,  0.0f, 1.0f, 0.0f, 0.0f,
-		 0.5f, -0.5f,  0.5f, 0.0f,  0.0f, 1.0f, 1.0f, 0.0f,
-		 0.5f,  0.5f,  0.5f, 0.0f,  0.0f, 1.0f, 1.0f, 1.0f,
-		-0.5f,  0.5f,  0.5f, 0.0f,  0.0f, 1.0f, 0.0f, 1.0f,
-		
-		-0.5f,  0.5f,  0.5f, -1.0f,  0.0f,  0.0f, 0.0f, 0.0f,
-		-0.5f,  0.5f, -0.5f, -1.0f,  0.0f,  0.0f, 1.0f, 0.0f,
-		-0.5f, -0.5f, -0.5f, -1.0f,  0.0f,  0.0f, 1.0f, 1.0f,
-		-0.5f, -0.5f,  0.5f, -1.0f,  0.0f,  0.0f, 0.0f, 1.0f,
-
-		 0.5f,  0.5f,  0.5f, 1.0f,  0.0f,  0.0f, 0.0f, 0.0f,
-		 0.5f,  0.5f, -0.5f, 1.0f,  0.0f,  0.0f, 1.0f, 0.0f,
-		 0.5f, -0.5f, -0.5f, 1.0f,  0.0f,  0.0f, 1.0f, 1.0f,
-		 0.5f, -0.5f,  0.5f, 1.0f,  0.0f,  0.0f, 0.0f, 1.0f,
-
-		-0.5f, -0.5f, -0.5f, 0.0f, -1.0f,  0.0f, 0.0f, 0.0f,
-		 0.5f, -0.5f, -0.5f, 0.0f, -1.0f,  0.0f, 1.0f, 0.0f,
-		 0.5f, -0.5f,  0.5f, 0.0f, -1.0f,  0.0f, 1.0f, 1.0f,
-		-0.5f, -0.5f,  0.5f, 0.0f, -1.0f,  0.0f, 0.0f, 1.0f,
-
-		-0.5f,  0.5f, -0.5f, 0.0f,  1.0f,  0.0f, 0.0f, 0.0f,
-		 0.5f,  0.5f, -0.5f, 0.0f,  1.0f,  0.0f, 1.0f, 0.0f,
-		 0.5f,  0.5f,  0.5f, 0.0f,  1.0f,  0.0f, 1.0f, 1.0f,
-		-0.5f,  0.5f,  0.5f, 0.0f,  1.0f,  0.0f, 0.0f, 1.0f
-	};
-
-	std::vector<GLuint> indices = {
-		0, 1 ,2,
-		0, 2, 3,
-		4, 5, 6,
-		4, 6, 7,
-		8, 9, 10,
-		8, 10 ,11,
-		12, 13 ,14,
-		12, 14, 15,
-		16, 17, 18,
-		16, 18, 19,
-		20, 21, 22,
-		20, 22, 23
-	};
-	// ---------------------------------------------------------------------------------
-	// ---------------------------------------------------------------------------------
-
-
-	// -----------------------------------------------------------------------------------
-	// create vertex buffer object and vertex arrays
-	GLuint VBO, VAO, EBO;
-
-	// create vertex buffer object to store raw vertices
-	glCreateBuffers(1, &VBO);
-	glNamedBufferData(VBO, vertices.size() * sizeof(float), vertices.data(), GL_STATIC_DRAW);
-
-	// create element buffer object to store indices
-	glCreateBuffers(1, &EBO);
-	glNamedBufferData(EBO, indices.size() * sizeof(GLuint), indices.data(), GL_STATIC_DRAW);
-
-	// create vertex array to store the organized vertices
-	glCreateVertexArrays(1, &VAO);
-
-	// bind the VBO to the VAO
-	glVertexArrayVertexBuffer(VAO, 0, VBO, 0, 8 * sizeof(float));
-
-	// enable atribute and define vertex formats
-	glEnableVertexArrayAttrib(VAO, 0);
-	glVertexArrayAttribFormat(VAO, 0, 3, GL_FLOAT, false, 0);
-	glEnableVertexArrayAttrib(VAO, 1);
-	glVertexArrayAttribFormat(VAO, 1, 3, GL_FLOAT, false, 3 * sizeof(float));
-	glEnableVertexArrayAttrib(VAO, 2);
-	glVertexArrayAttribFormat(VAO, 2, 2, GL_FLOAT, false, 6 * sizeof(float));
-
-	// associate vertex attributes and vertex buffer binding for a VAO
-	glVertexArrayAttribBinding(VAO, 0, 0);
-	glVertexArrayAttribBinding(VAO, 1, 0);
-	glVertexArrayAttribBinding(VAO, 2, 0);
-
-	// bind the EBO to the VAO
-	glVertexArrayElementBuffer(VAO, EBO);
-	// -----------------------------------------------------------------------------------
-	// -----------------------------------------------------------------------------------
-
-
-	// ---------------------------------------------------------------------------------
-	// cubes positions, rotations and colors
-	std::vector<glm::vec3> cubePositions = {
-		glm::vec3(0.0f,  0.0f,  0.0f),
-		glm::vec3(2.0f,  5.0f, -15.0f),
-		glm::vec3(-1.5f, -2.2f, -2.5f),
-		glm::vec3(-3.8f, -2.0f, -12.3f),
-		glm::vec3(2.4f, -0.4f, -3.5f),
-		glm::vec3(-1.7f,  3.0f, -7.5f),
-		glm::vec3(1.3f, -2.0f, -2.5f),
-		glm::vec3(1.5f,  2.0f, -2.5f),
-		glm::vec3(1.5f,  0.2f, -1.5f),
-		glm::vec3(-1.3f,  1.0f, -1.5f)
-	};
-
-	std::vector<glm::vec3> cubeRotations = {
-		glm::vec3(0.1f,  0.0f,  0.0f),
-		glm::vec3(1.0f,  0.5f, 1.0f),
-		glm::vec3(-0.5f, 0.2f, 0.5f),
-		glm::vec3(-0.8f, -0.0f, -0.3f),
-		glm::vec3(0.4f, -0.4f, -0.5f),
-		glm::vec3(-0.7f,  1.0f, -0.5f),
-		glm::vec3(0.3f, -1.0f, -0.5f),
-		glm::vec3(0.5f,  1.0f, -0.5f),
-		glm::vec3(0.5f,  0.2f, -0.5f),
-		glm::vec3(-0.3f,  1.0f, -0.5f)
-	};
-
-	std::vector<glm::vec3> cubeColors = {
-		glm::vec3(.1f, 0.5f, .1f),
-		glm::vec3(0.5f, 0.2f, 0.5f),
-		glm::vec3(0.8f, 0.0f, 0.3f),
-		glm::vec3(0.4f, 0.4f, 0.5f),
-		glm::vec3(0.7f, 0.1f, 0.5f),
-		glm::vec3(0.3f, 0.4f, 0.5f),
-		glm::vec3(0.2f, 0.6f, 0.1f),
-		glm::vec3(0.7f, 0.2f, 0.2f),
-		glm::vec3(0.3f, 1.0f, 0.5f),
-		glm::vec3(0.8f, 0.5f, 0.1f)
-	};
+	Texture sphereTexture("texture/container.png", "");
+	sphereTexture.bind(0);
 	// -----------------------------------------------------------------------------------
 	// -----------------------------------------------------------------------------------
 
@@ -278,7 +124,6 @@ int main()
 	glEnable(GL_DEPTH_TEST);
 
 
-
 	// init IMGUI
 	IMGUI_CHECKVERSION();
 	ImGui::CreateContext();
@@ -287,27 +132,6 @@ int main()
 	ImGui::StyleColorsDark();
 	ImGui_ImplGlfw_InitForOpenGL(window, true);
 	ImGui_ImplOpenGL3_Init("#version 460");
-
-
-	glm::vec3 directionalLightColor(1.0f);
-	glm::vec3 directionalLightDirection(0.0f, -1.0f, 0.0f);
-	glm::vec3 directionalLightSpecular(1.0f, 1.0f, 1.0f);
-
-
-	glm::vec3 spotLightDirection(0.0f, 0.0f, -1.0f);
-	glm::vec3 spotLightPosition(0.0f, 0.0f, 2.0f);
-	float innerCutOff = 12.5f;
-	float outerCutOff = 17.5f;
-	glm::vec3 spotLightColor(1.0f);
-	glm::vec3 spotLightLightDirection(0.0f, 0.0f, -1.0f);
-	glm::vec3 spotLightLightSpecular(1.0f, 1.0f, 1.0f);
-	float spotLightConstant = 1.0f;
-	float spotLightLinear = 0.09f;
-	float spotLightQuadratic = 0.032f;
-
-
-
-	glm::vec3 lightColor(1.0f);
 
 
 	// time between current frame and last frame
@@ -337,8 +161,6 @@ int main()
 		ImGui_ImplGlfw_NewFrame();
 		ImGui::NewFrame();
 
-		// bind the principal vertex array
-		glBindVertexArray(VAO);
 
 		// use the principal shader program
 		globalShader.use();
@@ -352,8 +174,8 @@ int main()
 		for (unsigned int i = 0; i < 1; i++)
 		{
 			model = glm::mat4(1.0f);
-			model = glm::translate(model, cubePositions[i]);
-			model = glm::rotate(model, theta, cubeRotations[i]);
+			model = glm::translate(model, glm::vec3(0.0f));
+			//model = glm::rotate(model, theta, cubeRotations[i]);
 			model = glm::scale(model, glm::vec3(1.0f));
 			//theta += angle * deltaSeconds;
 
@@ -362,87 +184,83 @@ int main()
 			globalShader.uniformMat4("projection", projection);
 
 
-			glm::vec3 directionalDiffuseColor = directionalLightColor * glm::vec3(0.5f);
+			glm::vec3 directionalDiffuseColor = directionalLight.color * glm::vec3(0.5f);
 			glm::vec3 directionalAmbientColor = directionalDiffuseColor * glm::vec3(0.2f);
 
-			globalShader.uniformVec3("directionalLight.direction", directionalLightDirection);
+			globalShader.uniformVec3("directionalLight.direction", directionalLight.direction);
 			globalShader.uniformVec3("directionalLight.ambient", directionalAmbientColor);
 			globalShader.uniformVec3("directionalLight.diffuse", directionalDiffuseColor);
-			globalShader.uniformVec3("directionalLight.specular", directionalLightSpecular);
+			globalShader.uniformVec3("directionalLight.specular", directionalLight.specular);
 
 
-			for (int i = 0; i < pointLightCount; i++)
+			for (int i = 0; i < pointLights.size(); i++)
 			{
 
-				glm::vec3 pointdiffuseColor = pointLightColors[i] * glm::vec3(0.5f);
+				glm::vec3 pointdiffuseColor = pointLights[i].color * glm::vec3(0.5f);
 				glm::vec3 pointAmbientColor = pointdiffuseColor * glm::vec3(0.2f);
 
 				std::string pointLightName = "pointLight[" + std::to_string(i) + "]";
-				globalShader.uniformVec3(pointLightName + ".position", pointLightPositions[i]);
+				globalShader.uniformVec3(pointLightName + ".position", pointLights[i].position);
 				globalShader.uniformVec3(pointLightName + ".ambient", pointAmbientColor);
 				globalShader.uniformVec3(pointLightName + ".diffuse", pointdiffuseColor);
-				globalShader.uniformVec3(pointLightName + ".specular", pointLightSpecular[i]);
-				globalShader.uniform1f(pointLightName + ".constant", pointLightConstants[i]);
-				globalShader.uniform1f(pointLightName + ".linear", pointLightLinears[i]);
-				globalShader.uniform1f(pointLightName + ".quadratic", pointLightQuadratics[i]);
+				globalShader.uniformVec3(pointLightName + ".specular", pointLights[i].specular);
+				globalShader.uniform1f(pointLightName + ".constant", pointLights[i].constant);
+				globalShader.uniform1f(pointLightName + ".linear", pointLights[i].linear);
+				globalShader.uniform1f(pointLightName + ".quadratic", pointLights[i].quadratic);
 			}
 
-			glm::vec3 spotLightDiffuseColor = spotLightColor * glm::vec3(0.5f);
+			glm::vec3 spotLightDiffuseColor = spotLight.color * glm::vec3(0.5f);
 			glm::vec3 spotLightAmbientColor = spotLightDiffuseColor * glm::vec3(0.2f);
 
-			globalShader.uniformVec3("spotLight.direction", spotLightDirection);
-			globalShader.uniformVec3("spotLight.position", spotLightPosition);
-			globalShader.uniform1f("spotLight.innerCutOff", glm::cos(glm::radians(innerCutOff)));
-			globalShader.uniform1f("spotLight.outerCutOff", glm::cos(glm::radians(outerCutOff)));
+			globalShader.uniformVec3("spotLight.direction", spotLight.direction);
+			globalShader.uniformVec3("spotLight.position", spotLight.position);
+			globalShader.uniform1f("spotLight.innerCutOff", glm::cos(glm::radians(spotLight.inner)));
+			globalShader.uniform1f("spotLight.outerCutOff", glm::cos(glm::radians(spotLight.outer)));
 			globalShader.uniformVec3("spotLight.ambient", spotLightAmbientColor);
 			globalShader.uniformVec3("spotLight.diffuse", spotLightDiffuseColor);
-			globalShader.uniformVec3("spotLight.specular", spotLightLightSpecular);
-			globalShader.uniform1f("spotLight.constant", spotLightConstant);
-			globalShader.uniform1f("spotLight.linear", spotLightLinear);
-			globalShader.uniform1f("spotLight.quadratic", spotLightQuadratic);
+			globalShader.uniformVec3("spotLight.specular", spotLight.specular);
+			globalShader.uniform1f("spotLight.constant", spotLight.constant);
+			globalShader.uniform1f("spotLight.linear", spotLight.linear);
+			globalShader.uniform1f("spotLight.quadratic", spotLight.quadratic);
 			globalShader.uniform1i("useSpotLight", useSpotLight);
 
 
 			globalShader.uniformVec3("viewPos", camera.position);
 
 
-			
-
-			testModel.Draw(globalShader);
+			testSphere.Draw(globalShader);
 
 			//glDrawElements(GL_TRIANGLES, indices.size(), GL_UNSIGNED_INT, GL_NONE);
 		}
 
 
 		pointLightShader.use();
-		for (int i = 0; i < pointLightCount; i++)
+		for (int i = 0; i < pointLights.size(); i++)
 		{
 			model = glm::mat4(1.0f);
-			model = glm::translate(model, pointLightPositions[i]);
+			model = glm::translate(model, pointLights[i].position);
 			model = glm::scale(model, glm::vec3(0.2f));
 
 			pointLightShader.uniformMat4("model", model);
 			pointLightShader.uniformMat4("view", view);
 			pointLightShader.uniformMat4("projection", projection);
 
-			pointLightShader.uniformVec3("lightColor", lightColor);
+			pointLightShader.uniformVec3("lightColor", pointLights[i].color);
 
-			glDrawElements(GL_TRIANGLES, indices.size(), GL_UNSIGNED_INT, GL_NONE);
+			testCube.Draw(pointLightShader);
 		}
 
 		model = glm::mat4(1.0f);
-		model = glm::translate(model, spotLightPosition);
+		model = glm::translate(model, spotLight.position);
 		model = glm::scale(model, glm::vec3(0.2f, 0.2f, 1.0f));
 
 		pointLightShader.uniformMat4("model", model);
 		pointLightShader.uniformMat4("view", view);
 		pointLightShader.uniformMat4("projection", projection);
 
-		pointLightShader.uniformVec3("lightColor", spotLightColor);
+		pointLightShader.uniformVec3("lightColor", spotLight.color);
 
-		glDrawElements(GL_TRIANGLES, indices.size(), GL_UNSIGNED_INT, GL_NONE);
-
-
+		testCube.Draw(pointLightShader);
 
 		
 
@@ -455,23 +273,23 @@ int main()
 		{
 			if (ImGui::TreeNode("Directional Light"))
 			{
-				ImGui::DragFloat3("direction", &directionalLightDirection[0]);
-				ImGui::ColorEdit3("color", &directionalLightColor[0]);
-				ImGui::DragFloat3("specular", &directionalLightSpecular[0]);
+				ImGui::DragFloat3("direction", &directionalLight.direction[0]);
+				ImGui::ColorEdit3("color", &directionalLight.color[0]);
+				ImGui::DragFloat3("specular", &directionalLight.specular[0]);
 				ImGui::TreePop();
 			}
 			if (ImGui::TreeNode("Point Lights"))
 			{
-				for (int i = 0; i < pointLightCount; i++)
+				for (int i = 0; i < pointLights.size(); i++)
 				{
 					if (ImGui::TreeNode("Point Light " + i))
 					{
-						ImGui::DragFloat3("position", &pointLightPositions[i][0]);
-						ImGui::ColorEdit3("color", &pointLightColors[i][0]);
-						ImGui::DragFloat3("specular", &pointLightSpecular[i][0]);
-						ImGui::DragFloat("constant", &pointLightConstants[i]);
-						ImGui::DragFloat("linear", &pointLightLinears[i]);
-						ImGui::DragFloat("quadratic", &pointLightQuadratics[i]);
+						ImGui::DragFloat3("position", &pointLights[i].position[0]);
+						ImGui::ColorEdit3("color", &pointLights[i].color[0]);
+						ImGui::DragFloat3("specular", &pointLights[i].specular[0]);
+						ImGui::DragFloat("constant", &pointLights[i].constant);
+						ImGui::DragFloat("linear", &pointLights[i].linear);
+						ImGui::DragFloat("quadratic", &pointLights[i].quadratic);
 						ImGui::TreePop();
 					}
 				}
@@ -479,47 +297,22 @@ int main()
 			}
 			if (ImGui::TreeNode("Spot Light"))
 			{
-				ImGui::DragFloat3("position", &spotLightPosition[0]);
-				ImGui::DragFloat3("direction", &spotLightDirection[0]);
-				ImGui::SliderFloat("innerCutOff", &innerCutOff, 0.0f, outerCutOff);
-				ImGui::SliderFloat("outerCutOff", &outerCutOff, 0.0f, 90.0f);
-				ImGui::ColorEdit3("color", &spotLightColor[0]);
-				ImGui::DragFloat3("specular", &spotLightLightSpecular[0]);
-				ImGui::DragFloat("constant", &spotLightConstant);
-				ImGui::DragFloat("linear", &spotLightLinear);
-				ImGui::DragFloat("quadratic", &spotLightQuadratic);
+				ImGui::DragFloat3("position", &spotLight.position[0]);
+				ImGui::DragFloat3("direction", &spotLight.direction[0]);
+				ImGui::SliderFloat("innerCutOff", &spotLight.inner, 0.0f, spotLight.outer);
+				ImGui::SliderFloat("outerCutOff", &spotLight.outer, 0.0f, 90.0f);
+				ImGui::ColorEdit3("color", &spotLight.color[0]);
+				ImGui::DragFloat3("specular", &spotLight.specular[0]);
+				ImGui::DragFloat("constant", &spotLight.constant);
+				ImGui::DragFloat("linear", &spotLight.linear);
+				ImGui::DragFloat("quadratic", &spotLight.quadratic);
 				ImGui::TreePop();
 			}
 			ImGui::TreePop();
 		}
-		
 
-
-
-		//if (ImGui::TreeNode("Basic trees"))
-		//{
-		//	for (int i = 0; i < 5; i++)
-		//	{
-		//		// Use SetNextItemOpen() so set the default state of a node to be open. We could
-		//		// also use TreeNodeEx() with the ImGuiTreeNodeFlags_DefaultOpen flag to achieve the same thing!
-		//		if (i == 0)
-		//			ImGui::SetNextItemOpen(true, ImGuiCond_Once);
-
-		//		if (ImGui::TreeNode((void*)(intptr_t)i, "Child %d", i))
-		//		{
-		//			ImGui::Text("blah blah");
-		//			ImGui::SameLine();
-		//			if (ImGui::SmallButton("button")) {}
-		//			ImGui::TreePop();
-		//		}
-		//	}
-		//	ImGui::TreePop();
-		//}
-
-		ImGui::ShowDemoWindow();
 
 		ImGui::End();
-
 		ImGui::Render();
 		ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 
@@ -539,10 +332,6 @@ int main()
 	ImGui::DestroyContext();
 
 
-	glDeleteVertexArrays(1, &VAO);
-	glDeleteBuffers(1, &EBO);
-	glDeleteBuffers(1, &VBO);
-
 	glfwDestroyWindow(window);
 	glfwTerminate();
 
@@ -557,10 +346,15 @@ void processInput(GLFWwindow* window, float deltaSeconds)
 	int stateKeyF = glfwGetKey(window, GLFW_KEY_F);
 	if (stateKeyF == GLFW_PRESS && lastStateKeyF == GLFW_RELEASE)
 	{
-		if(focus)
+		if (focus)
+		{
 			glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
+		}
 		else
+		{
+			glfwSetCursorPos(window, camera.lastX, camera.lastY);
 			glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+		}
 
 		focus = !focus;
 
@@ -582,23 +376,27 @@ void processInput(GLFWwindow* window, float deltaSeconds)
 	}
 	lastStateKeyF11 = stateKeyF11;
 
+	const glm::vec3 worldRight(1.0f, 0.0f, 0.0f);
+	const glm::vec3 worldUp(0.0f, 1.0f, 0.0f);
+	const glm::vec3 worldFront(0.0f, 0.0f, -1.0f);
+
 	if(focus)
 		camera.processKeyboardEvent(window, deltaSeconds);
 	else
 	{
 		if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
-			pointLightPositions[0] += worldFront * lightMoveSpeed * deltaSeconds;
+			pointLights[0].position += worldFront * lightMoveSpeed * deltaSeconds;
 		if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)
-			pointLightPositions[0] -= worldFront * lightMoveSpeed * deltaSeconds;
+			pointLights[0].position -= worldFront * lightMoveSpeed * deltaSeconds;
 
 		if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
-			pointLightPositions[0] += worldRight * lightMoveSpeed * deltaSeconds;
+			pointLights[0].position += worldRight * lightMoveSpeed * deltaSeconds;
 		if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS)
-			pointLightPositions[0] -= worldRight * lightMoveSpeed * deltaSeconds;
+			pointLights[0].position -= worldRight * lightMoveSpeed * deltaSeconds;
 
 		if (glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_PRESS)
-			pointLightPositions[0] += worldUp * lightMoveSpeed * deltaSeconds;
+			pointLights[0].position += worldUp * lightMoveSpeed * deltaSeconds;
 		if (glfwGetKey(window, GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS)
-			pointLightPositions[0] -= worldUp * lightMoveSpeed * deltaSeconds;
+			pointLights[0].position -= worldUp * lightMoveSpeed * deltaSeconds;
 	}
 }

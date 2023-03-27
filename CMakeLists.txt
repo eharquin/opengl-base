@@ -71,7 +71,7 @@ set(SRC ${SOURCE_DIR}/main.cpp
         ${SOURCE_DIR}/imgui/imgui.h
         ${SOURCE_DIR}/imgui/imstb_rectpack.h
         ${SOURCE_DIR}/imgui/imstb_textedit.h
-        ${SOURCE_DIR}/imgui/imstb_truetype.h "src/material.h" "src/material.cpp")
+        ${SOURCE_DIR}/imgui/imstb_truetype.h "src/material.h" "src/material.cpp" "src/sphere.h" "src/sphere.cpp" "src/geometry.h" "src/geometry.cpp" "src/light.h" "src/cube.h" "src/cube.cpp")
 
 add_executable(opengl-base ${SRC})
 

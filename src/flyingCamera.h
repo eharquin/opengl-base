@@ -17,7 +17,7 @@ public:
 	float yaw;
 	float pitch;
 
-	float moveSpeed = 2.0f;
+	float moveSpeed = 10.0f;
 
 
 	// projection variable

@@ -8,6 +8,14 @@ Model::Model(const std::string& path)
 	loadModel(path);
 }
 
+Model::Model(const Geometry& geometry, const Material& material)
+{
+	Mesh mesh(std::move(geometry.getVertices()), std::move(geometry.getIndices()), 0);
+	meshes.push_back(std::move(mesh));
+
+	materials.push_back(material);
+}
+
 void Model::Draw(const Shader& shader) const
 {
 	for (int i = 0; i < loadedTextures.size(); i++)

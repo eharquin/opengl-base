@@ -1,11 +1,13 @@
 #pragma once
 #include "openglbase.h"
 #include "mesh.h"
+#include "geometry.h"
 
 class Model
 {
 public:
 	Model(const std::string& path);
+	Model(const Geometry& geometry, const Material& material);
 
 	// delete copy constructor
 	Model(const Model&) = delete;
@@ -16,6 +18,8 @@ public:
 	Model& operator=(Model&& other) = delete;
 
 	void Draw(const Shader& shader) const;
+
+	glm::mat4 model;
 
 private:
 	std::vector<Mesh> meshes;

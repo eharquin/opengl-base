@@ -188,11 +188,11 @@ void main()
     vec3 result = vec3(0.0);
     result += ComputeDirectionalLight(directionalLight, normal, viewDirectionNormalized);
 
-    //for(int i = 0; i < NR_POINT_LIGHTS; i++)
-    //    result += ComputePointLight(pointLight[i], normal, viewDirectionNormalized);
+    for(int i = 0; i < NR_POINT_LIGHTS; i++)
+        result += ComputePointLight(pointLight[i], normal, viewDirectionNormalized);
 
-    //if(useSpotLight)
-    //    result += ComputeSpotLight(spotLight, normal, viewDirectionNormalized);
+    if(useSpotLight)
+        result += ComputeSpotLight(spotLight, normal, viewDirectionNormalized);
 
     // emission
 //    vec3 emission = vec3(0.0);
