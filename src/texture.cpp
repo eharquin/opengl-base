@@ -14,7 +14,7 @@ Texture::Texture(const std::string& path, const std::string& type)
 	glTextureParameteri(id_, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
 	// use stb lib to read the image
-	stbi_set_flip_vertically_on_load(false);
+	//stbi_set_flip_vertically_on_load(false);
 	int widthTexture, heightTexture, numColCh;
 	unsigned char* data = stbi_load(path.c_str(), &widthTexture, &heightTexture, &numColCh, 0);
 	if (!data)
