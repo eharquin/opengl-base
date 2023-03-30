@@ -5,7 +5,6 @@
 #include "model.h"
 #include "sphere.h"
 #include "light.h"
-#include "cube.h"
 
 
 void processInput(GLFWwindow* window, float deltaSeconds);
@@ -23,19 +22,6 @@ float lightMoveSpeed = 5.0f;
 
 int lastStateKeyT = GLFW_RELEASE;
 bool useSpotLight = true;
-
-
-DirectionalLight directionalLight(glm::vec3(1.0f), glm::vec3(0.0f, -1.0f, 0.0f), glm::vec3(1.0f));
-
-std::vector<PointLight> pointLights = {
-	PointLight(glm::vec3(1.0f), glm::vec3(10.0f, 1.0f, 10.0f), glm::vec3(1.0f), 1.0f, 0.09f, 0.032f),
-	PointLight(glm::vec3(1.0f), glm::vec3(-10.0f, 1.0f, -10.0f), glm::vec3(1.0f), 1.0f, 0.09f, 0.032f),
-	PointLight(glm::vec3(1.0f), glm::vec3(10.0f, 1.0f, -10.0f), glm::vec3(1.0f), 1.0f, 0.09f, 0.032f),
-	PointLight(glm::vec3(1.0f), glm::vec3(-10.0f, 1.0f, 10.0f), glm::vec3(1.0f), 1.0f, 0.09f, 0.032f)
-};
-
-SpotLight spotLight(glm::vec3(1.0f), glm::vec3(0.0f, 0.0f, -1.0f), glm::vec3(0.0f, 0.0f, 2.0f), glm::vec3(1.0f), 12.5f, 17.5f, 1.0f, 0.09f, 0.032);
-
 
 int main()
 {
@@ -96,42 +82,26 @@ int main()
 	//Model testModel("model/backpack/backpack.obj");
 	
 	Material material("sphere material", 0, 0, 0, glm::vec3(1.0f), glm::vec3(1.0f), 256);
-
 	Model testSphere(Sphere(), material);
 
 
-
-	Model testCube(Cube(), Material("cube material", 0, 0, 0, glm::vec3(1.0f), glm::vec3(1.0f), 256));
-
-	// ---------------------------------------------------------------------------------
-	// create vertexshader, fragmentshader, compile them and link to the shader program
-	Shader globalShader("shader/global_vertex.glsl", "shader/global_fragment.glsl");
-	Shader pointLightShader("shader/global_vertex.glsl", "shader/point_light_fragment.glsl");
-	// ---------------------------------------------------------------------------------
-	// ---------------------------------------------------------------------------------
-
-	// -----------------------------------------------------------------------------------
-	// create texture
-	Texture sphereTexture("texture/container.png", "");
-	sphereTexture.bind(0);
-	// -----------------------------------------------------------------------------------
-	// -----------------------------------------------------------------------------------
+	Shader simpleColorShader("shader/simple_color_vertex.glsl", "shader/simple_color_fragment.glsl");
 
 
-	// define the clear color (clear blue)
+	// define the clear color (deep blue)
 	glClearColor(.05f, 0.05f, .3f, 1.f);
 	// enable depth comparaison (3D)
 	glEnable(GL_DEPTH_TEST);
 
 
 	// init IMGUI
-	IMGUI_CHECKVERSION();
-	ImGui::CreateContext();
-	ImGuiIO& io = ImGui::GetIO(); 
-	(void)io;
-	ImGui::StyleColorsDark();
-	ImGui_ImplGlfw_InitForOpenGL(window, true);
-	ImGui_ImplOpenGL3_Init("#version 460");
+	//IMGUI_CHECKVERSION();
+	//ImGui::CreateContext();
+	//ImGuiIO& io = ImGui::GetIO(); 
+	//(void)io;
+	//ImGui::StyleColorsDark();
+	//ImGui_ImplGlfw_InitForOpenGL(window, true);
+	//ImGui_ImplOpenGL3_Init("#version 460");
 
 
 	// time between current frame and last frame
@@ -157,15 +127,13 @@ int main()
 		// clear the screen with the clear color
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-		ImGui_ImplOpenGL3_NewFrame();
-		ImGui_ImplGlfw_NewFrame();
-		ImGui::NewFrame();
+		//ImGui_ImplOpenGL3_NewFrame();
+		//ImGui_ImplGlfw_NewFrame();
+		//ImGui::NewFrame();
 
 
 		// use the principal shader program
-		globalShader.use();
-
-		
+		simpleColorShader.use();
 
 		glm::mat4 model(1.0f);
 		glm::mat4 view = camera.view();
@@ -179,142 +147,19 @@ int main()
 			model = glm::scale(model, glm::vec3(1.0f));
 			//theta += angle * deltaSeconds;
 
-			globalShader.uniformMat4("model", model);
-			globalShader.uniformMat4("view", view);
-			globalShader.uniformMat4("projection", projection);
+			simpleColorShader.uniformMat4("model", model);
+			simpleColorShader.uniformMat4("view", view);
+			simpleColorShader.uniformMat4("projection", projection);
 
-
-			glm::vec3 directionalDiffuseColor = directionalLight.color * glm::vec3(0.5f);
-			glm::vec3 directionalAmbientColor = directionalDiffuseColor * glm::vec3(0.2f);
-
-			globalShader.uniformVec3("directionalLight.direction", directionalLight.direction);
-			globalShader.uniformVec3("directionalLight.ambient", directionalAmbientColor);
-			globalShader.uniformVec3("directionalLight.diffuse", directionalDiffuseColor);
-			globalShader.uniformVec3("directionalLight.specular", directionalLight.specular);
-
-
-			for (int i = 0; i < pointLights.size(); i++)
-			{
-
-				glm::vec3 pointdiffuseColor = pointLights[i].color * glm::vec3(0.5f);
-				glm::vec3 pointAmbientColor = pointdiffuseColor * glm::vec3(0.2f);
-
-				std::string pointLightName = "pointLight[" + std::to_string(i) + "]";
-				globalShader.uniformVec3(pointLightName + ".position", pointLights[i].position);
-				globalShader.uniformVec3(pointLightName + ".ambient", pointAmbientColor);
-				globalShader.uniformVec3(pointLightName + ".diffuse", pointdiffuseColor);
-				globalShader.uniformVec3(pointLightName + ".specular", pointLights[i].specular);
-				globalShader.uniform1f(pointLightName + ".constant", pointLights[i].constant);
-				globalShader.uniform1f(pointLightName + ".linear", pointLights[i].linear);
-				globalShader.uniform1f(pointLightName + ".quadratic", pointLights[i].quadratic);
-			}
-
-			glm::vec3 spotLightDiffuseColor = spotLight.color * glm::vec3(0.5f);
-			glm::vec3 spotLightAmbientColor = spotLightDiffuseColor * glm::vec3(0.2f);
-
-			globalShader.uniformVec3("spotLight.direction", spotLight.direction);
-			globalShader.uniformVec3("spotLight.position", spotLight.position);
-			globalShader.uniform1f("spotLight.innerCutOff", glm::cos(glm::radians(spotLight.inner)));
-			globalShader.uniform1f("spotLight.outerCutOff", glm::cos(glm::radians(spotLight.outer)));
-			globalShader.uniformVec3("spotLight.ambient", spotLightAmbientColor);
-			globalShader.uniformVec3("spotLight.diffuse", spotLightDiffuseColor);
-			globalShader.uniformVec3("spotLight.specular", spotLight.specular);
-			globalShader.uniform1f("spotLight.constant", spotLight.constant);
-			globalShader.uniform1f("spotLight.linear", spotLight.linear);
-			globalShader.uniform1f("spotLight.quadratic", spotLight.quadratic);
-			globalShader.uniform1i("useSpotLight", useSpotLight);
-
-
-			globalShader.uniformVec3("viewPos", camera.position);
-
-
-			testSphere.Draw(globalShader);
+			testSphere.Draw(simpleColorShader);
 
 			//glDrawElements(GL_TRIANGLES, indices.size(), GL_UNSIGNED_INT, GL_NONE);
 		}
 
 
-		pointLightShader.use();
-		for (int i = 0; i < pointLights.size(); i++)
-		{
-			model = glm::mat4(1.0f);
-			model = glm::translate(model, pointLights[i].position);
-			model = glm::scale(model, glm::vec3(0.2f));
-
-			pointLightShader.uniformMat4("model", model);
-			pointLightShader.uniformMat4("view", view);
-			pointLightShader.uniformMat4("projection", projection);
-
-			pointLightShader.uniformVec3("lightColor", pointLights[i].color);
-
-			testCube.Draw(pointLightShader);
-		}
-
-		model = glm::mat4(1.0f);
-		model = glm::translate(model, spotLight.position);
-		model = glm::scale(model, glm::vec3(0.2f, 0.2f, 1.0f));
-
-		pointLightShader.uniformMat4("model", model);
-		pointLightShader.uniformMat4("view", view);
-		pointLightShader.uniformMat4("projection", projection);
-
-		pointLightShader.uniformVec3("lightColor", spotLight.color);
-
-		testCube.Draw(pointLightShader);
-
-		
-
-
-		ImGui::Begin("imgui");
-		ImGui::Text("camera");
-		ImGui::MenuItem("Menu");
-		ImGui::Checkbox("isPerpective", &camera.isPerspective);
-		if (ImGui::TreeNode("Light Configuration"))
-		{
-			if (ImGui::TreeNode("Directional Light"))
-			{
-				ImGui::DragFloat3("direction", &directionalLight.direction[0]);
-				ImGui::ColorEdit3("color", &directionalLight.color[0]);
-				ImGui::DragFloat3("specular", &directionalLight.specular[0]);
-				ImGui::TreePop();
-			}
-			if (ImGui::TreeNode("Point Lights"))
-			{
-				for (int i = 0; i < pointLights.size(); i++)
-				{
-					if (ImGui::TreeNode("Point Light " + i))
-					{
-						ImGui::DragFloat3("position", &pointLights[i].position[0]);
-						ImGui::ColorEdit3("color", &pointLights[i].color[0]);
-						ImGui::DragFloat3("specular", &pointLights[i].specular[0]);
-						ImGui::DragFloat("constant", &pointLights[i].constant);
-						ImGui::DragFloat("linear", &pointLights[i].linear);
-						ImGui::DragFloat("quadratic", &pointLights[i].quadratic);
-						ImGui::TreePop();
-					}
-				}
-				ImGui::TreePop();
-			}
-			if (ImGui::TreeNode("Spot Light"))
-			{
-				ImGui::DragFloat3("position", &spotLight.position[0]);
-				ImGui::DragFloat3("direction", &spotLight.direction[0]);
-				ImGui::SliderFloat("innerCutOff", &spotLight.inner, 0.0f, spotLight.outer);
-				ImGui::SliderFloat("outerCutOff", &spotLight.outer, 0.0f, 90.0f);
-				ImGui::ColorEdit3("color", &spotLight.color[0]);
-				ImGui::DragFloat3("specular", &spotLight.specular[0]);
-				ImGui::DragFloat("constant", &spotLight.constant);
-				ImGui::DragFloat("linear", &spotLight.linear);
-				ImGui::DragFloat("quadratic", &spotLight.quadratic);
-				ImGui::TreePop();
-			}
-			ImGui::TreePop();
-		}
-
-
-		ImGui::End();
-		ImGui::Render();
-		ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
+		//ImGui::End();
+		//ImGui::Render();
+		//ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 
 
 		// compute events of the window
@@ -327,9 +172,9 @@ int main()
 	// -----------------------------------------------------------------------------------
 
 
-	ImGui_ImplOpenGL3_Shutdown();
-	ImGui_ImplGlfw_Shutdown();
-	ImGui::DestroyContext();
+	//ImGui_ImplOpenGL3_Shutdown();
+	//ImGui_ImplGlfw_Shutdown();
+	//ImGui::DestroyContext();
 
 
 	glfwDestroyWindow(window);
@@ -384,7 +229,7 @@ void processInput(GLFWwindow* window, float deltaSeconds)
 		camera.processKeyboardEvent(window, deltaSeconds);
 	else
 	{
-		if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
+		/*if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
 			pointLights[0].position += worldFront * lightMoveSpeed * deltaSeconds;
 		if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)
 			pointLights[0].position -= worldFront * lightMoveSpeed * deltaSeconds;
@@ -397,6 +242,6 @@ void processInput(GLFWwindow* window, float deltaSeconds)
 		if (glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_PRESS)
 			pointLights[0].position += worldUp * lightMoveSpeed * deltaSeconds;
 		if (glfwGetKey(window, GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS)
-			pointLights[0].position -= worldUp * lightMoveSpeed * deltaSeconds;
+			pointLights[0].position -= worldUp * lightMoveSpeed * deltaSeconds;*/
 	}
 }

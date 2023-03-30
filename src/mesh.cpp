@@ -75,13 +75,10 @@ void Mesh::setup()
 	glEnableVertexArrayAttrib(VAO, 0);
 	glVertexArrayAttribFormat(VAO, 0, 3, GL_FLOAT, GL_FALSE, 0);
 	glEnableVertexArrayAttrib(VAO, 1);
-	glVertexArrayAttribFormat(VAO, 1, 3, GL_FLOAT, GL_FALSE, offsetof(Vertex, normal));
-	glEnableVertexArrayAttrib(VAO, 2);
-	glVertexArrayAttribFormat(VAO, 2, 2, GL_FLOAT, GL_FALSE, offsetof(Vertex, uv));
+	glVertexArrayAttribFormat(VAO, 1, 3, GL_FLOAT, GL_FALSE, offsetof(Vertex, color));
 
 	glVertexArrayAttribBinding(VAO, 0, 0);
 	glVertexArrayAttribBinding(VAO, 1, 0);
-	glVertexArrayAttribBinding(VAO, 2, 0);
 
 	glVertexArrayElementBuffer(VAO, EBO);
 }

@@ -165,7 +165,7 @@ void Model::loadModel(const std::string& path)
 					tinyobj::real_t normalY = attrib.normals[3 * size_t(index.normal_index) + 1];
 					tinyobj::real_t normalZ = attrib.normals[3 * size_t(index.normal_index) + 2];
 
-					vertex.normal = glm::vec3(normalX, normalY, normalZ);
+					//vertex.normal = glm::vec3(normalX, normalY, normalZ);
 				}
 
 				// check if `texcoord_index` is zero or positive. negative = no texcoord data
@@ -174,7 +174,7 @@ void Model::loadModel(const std::string& path)
 					tinyobj::real_t texcoordX = attrib.texcoords[2 * size_t(index.texcoord_index) + 0];
 					tinyobj::real_t texcoordY = attrib.texcoords[2 * size_t(index.texcoord_index) + 1];
 
-					vertex.uv = glm::vec2(texcoordX, texcoordY);
+					//vertex.uv = glm::vec2(texcoordX, texcoordY);
 				}
 
 				if (uniqueVertices.count(vertex) == 0) {

@@ -3,8 +3,8 @@
 Sphere::Sphere()
 {
 	const float radius = 3.0f;
-	const int sectorCount = 10;
-	const int stackCount = 10;
+	const int sectorCount = 50;
+	const int stackCount = 50;
 
 	float x, y, z, xy;
 	float nx, ny, nz, lenghtInv = 1.0f / radius;
@@ -34,18 +34,18 @@ Sphere::Sphere()
 			
 			vertex.position = glm::vec3(x, y, z);
 
-			// normalized vertex normal (nx, ny, nz)
-			nx = x * lenghtInv;
-			ny = y * lenghtInv;
-			nz = z * lenghtInv;
+			if ((i+j)% 2 == 0)
+			{
+				vertex.color = glm::vec3(0.0f, 0.0f, 1.0f);
+			}
+			else
+			{
+				vertex.color = glm::vec3(0.0f, 1.0f, 1.0f);
+			}
 
-			vertex.normal = glm::vec3(nx, ny, nz);
 
-			// vertex texture coordinates (s, t) range between [0, 1]
-			s = (float)j / sectorCount;
-			t = (float)i / stackCount;
-			
-			vertex.uv = glm::vec2(t, s);
+
+
 
 			vertices_.push_back(vertex);
 		}

@@ -6,11 +6,10 @@
 struct Vertex
 {
 	glm::vec3 position;
-	glm::vec3 normal;
-	glm::vec2 uv;
+	glm::vec3 color;
 
 	inline bool operator==(const Vertex& other) const {
-		return position == other.position && uv == other.uv && normal == other.normal;
+		return position == other.position && color == other.color;
 	}
 };
 
@@ -20,8 +19,7 @@ template<> struct std::hash<Vertex>
 	size_t operator()(Vertex const& vertex) const
 	{
 		return ((std::hash<glm::vec3>()(vertex.position) ^
-			(std::hash<glm::vec3>()(vertex.normal) << 1)) >> 1) ^
-			(std::hash<glm::vec2>()(vertex.uv) << 1);
+			(std::hash<glm::vec3>()(vertex.color) << 1)) >> 1);
 	}
 };
 
