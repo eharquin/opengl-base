@@ -39,7 +39,7 @@ int main()
 	// create window (define the viewport by default)
 	int count = 0;
 	GLFWmonitor** monitor = glfwGetMonitors(&count); 
-	const GLFWvidmode* mode = glfwGetVideoMode(monitor[2]);
+	const GLFWvidmode* mode = glfwGetVideoMode(monitor[1]);
 	GLFWwindow* window = glfwCreateWindow(WIDTH, HEIGHT, "OPENGLBASE", NULL, NULL);
 	if (window == NULL)
 	{
