@@ -82,7 +82,7 @@ int main()
 	//Model testModel("model/backpack/backpack.obj");
 	
 	Material material("sphere material", 0, 0, 0, glm::vec3(1.0f), glm::vec3(1.0f), 256);
-	Model testSphere(Sphere(), material);
+	Model testSphere(IcoSphere(), material);
 
 
 	Shader simpleColorShader("shader/simple_color_vertex.glsl", "shader/simple_color_fragment.glsl");
