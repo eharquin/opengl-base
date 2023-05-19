@@ -88,4 +88,4 @@ set_target_properties(opengl-base PROPERTIES FOLDER ${PROJECT_NAME})
 
 # Copy resoures folder to the binary directory
 file(COPY ${TEXTURE_DIR} DESTINATION ${CMAKE_RUNTIME_OUTPUT_DIRECTORY})
-file(COPY ${SHADER_DIR} DESTINATION ${CMAKE_RUNTIME_OUTPUT_DIRECTORY})
+
