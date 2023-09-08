@@ -132,7 +132,7 @@ int main()
 	// -----------------------------------------------------------------------------------
 
 
-	// define the clear color (clear blue)
+	// define the clear color (clear violet)
 	glClearColor(.6f, .6f, .8f, 1.f);
 
 
