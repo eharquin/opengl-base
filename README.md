@@ -6,6 +6,6 @@
 
 ### Build is managed by cmake.
 
-- <a href="[eharquin/opengl-base at 000-window (github.com)](https://github.com/eharquin/opengl-base/tree/000-window)">000-window</a>
+- <a href="https://github.com/eharquin/opengl-base/tree/000-window">000-window</a>
 - 
 
