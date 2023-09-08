@@ -2,19 +2,13 @@
 
 ## 001-triangle
 
-### modern opengl 4.6 + glfw + glad game engine project.
+### Create a window with a uniform background color and a isosceles triangle in the center.
 
-### I want to go through every concept of modern opengl / computer graphics with a branch dedicated to a concept or sub-concept.
-
-### Build is managed by cmake.
-
-Create a window with a uniform background color and a isosceles triangle in the center.
-
-Concept evoked :
+#### Concept evoked :
 
 - glfw window
 
-New concept :
+#### New concept :
 
 - shader source
 - fragment shader
