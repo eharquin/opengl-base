@@ -4,6 +4,8 @@
 
 ### I want to go through every concept of modern opengl / computer graphics with a branch dedicated to a concept or a  sub-concept.
 
+### The first chapters will follow the amazing tutorials on <a href="https://learnopengl.com/">learnopengl</a> by JoeyDeVries.
+
 ### Build is managed by cmake.
 
 
