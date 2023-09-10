@@ -111,7 +111,7 @@ int main()
 	std::vector<glm::vec2> vertices;
 	float constexpr two_pi_over_three = (2 * glm::pi<float>()) / 3;
 
-	// init angle at 90° : first vertex will be in [0; 1]
+	// init angle at 90° : first vertex will be at [0; 1]
 	float angle = glm::pi<float>() / 2;
 	int count = 0;
 
