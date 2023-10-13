@@ -3,8 +3,8 @@
 Sphere::Sphere()
 {
 	const float radius = 3.0f;
-	const int sectorCount = 10;
-	const int stackCount = 10;
+	const int sectorCount = 50;
+	const int stackCount = 50;
 
 	float x, y, z, xy;
 	float nx, ny, nz, lenghtInv = 1.0f / radius;
